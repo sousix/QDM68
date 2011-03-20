@@ -6,6 +6,7 @@
 #include <QtSql>
 #include "sqltablemodelcheckable.h"
 #include "settingsdialog.h"
+#include "threadparser.h"
 
 #define CFG_FILE "qdm68.cfg"
 
@@ -23,35 +24,43 @@ public:
 
 protected:
     bool createDatabase();
-    void setSelection( QSqlQuery * query );
+    void setSelection( QSqlQuery * );
     void createDemosList();
     void initSettings();
     void saveSettings();
-    void parseDemo();
     void updateSelectionInfos();
+    void parseAndSaveGameState( QString, QModelIndex, QModelIndex );
+    void displayDemosInfos( int );
 
 protected slots:
     void invertSelection();
     void selectWorst();
     void unselectAll();
     void onBoxChecked( const QModelIndex &, const QModelIndex & );
-    void buildSelection( QSqlQuery * query  );
+    void buildSelection( QSqlQuery * );
     void openDemosDialog();
     void openSettingsDialog();
     void playDemo();
-    void updateDemoInfos( const QModelIndex & );
-    void showDemoInfos();
+    void parseAllDemo();
+    void onDemoClicked( const QModelIndex & );
+    void onMoreInfosClicked();
+    void onDemoParsed( int, QString, int, int );
+    void onThreadParserFinished();
 
 private:
     Ui::MainWindow * ui;
 
     QDir m_demosDir;
     QString m_engineFile;
-    QMap<QString, int> m_rules;
-    SqlTableModelCheckable *m_demoModel;
+    QMap<QString, QString> m_rules;
+    SqlTableModelCheckable * m_demoModel;
     SettingsDialog * m_SettingsDialog;
     QStandardItemModel * m_varModel;
     bool m_selectInProgress;
+    QProgressBar * m_progressBar;
+    QLabel * m_textProgressBar;
+
+    ThreadParser * m_thread;
 };
 
 #endif // MAINWINDOW_H

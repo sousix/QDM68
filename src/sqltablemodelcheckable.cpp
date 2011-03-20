@@ -1,14 +1,16 @@
 #include "sqltablemodelcheckable.h"
 
-SqlTableModelCheckable::SqlTableModelCheckable(QObject * parent, QSqlDatabase db) : QSqlTableModel(parent, db)
+SqlTableModelCheckable::SqlTableModelCheckable(QObject * parent, QSqlDatabase db)
+                        : QSqlTableModel(parent, db), checklist(), fontBold(), fontNormal()
 {
+    fontBold.setBold(true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 Qt::ItemFlags SqlTableModelCheckable::flags(const QModelIndex &index) const
 {
-    return ((QSqlTableModel::flags(index) | Qt::ItemIsUserCheckable) & ~Qt::ItemIsEditable);
+    return ((QSqlTableModel::flags(index) | Qt::ItemIsUserCheckable ) & ~Qt::ItemIsEditable);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -16,7 +18,20 @@ Qt::ItemFlags SqlTableModelCheckable::flags(const QModelIndex &index) const
 QVariant SqlTableModelCheckable::data(const QModelIndex& index, int role) const
 {
     if( role == Qt::CheckStateRole && index.column() == 1 )
-        return checklist.contains(index) ? Qt::Checked : Qt::Unchecked;
+    {
+        if( checklist.contains(index) )
+            return Qt::Checked;
+        else
+            return Qt::Unchecked;
+    }
+
+    if( role == Qt::FontRole && index.column() == 1 )
+    {
+        if( checklist.contains(index) )
+            return fontBold;
+        else
+            return fontNormal;
+    }
 
     return QSqlTableModel::data(index, role);
 }

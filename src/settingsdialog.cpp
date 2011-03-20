@@ -53,9 +53,9 @@ void SettingsDialog::openEngineDialog()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void SettingsDialog::setRules( QMap<QString, int> * rules )
+void SettingsDialog::setRules( QMap<QString, QString> * rules )
 {
-    QMap<QString, int>::iterator it;
+    QMap<QString, QString>::iterator it;
     int row;
 
     m_model->clear();
@@ -68,11 +68,11 @@ void SettingsDialog::setRules( QMap<QString, int> * rules )
     it = rules->begin();
     while( it != rules->end() )
     {
-        QStandardItem *itemKey = new QStandardItem(QString("%0").arg(it.key()));
+        QStandardItem *itemKey = new QStandardItem(it.key());
         itemKey->setEditable(false);
         m_model->setItem(row, 0, itemKey);
 
-        QStandardItem *itemValue = new QStandardItem(QString("%0").arg(it.value()));
+        QStandardItem *itemValue = new QStandardItem(it.value());
         m_model->setItem(row, 1, itemValue);
 
         it++;
@@ -84,14 +84,14 @@ void SettingsDialog::setRules( QMap<QString, int> * rules )
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-QMap<QString, int> SettingsDialog::getRules()
+QMap<QString, QString> SettingsDialog::getRules()
 {
-    QMap<QString, int> rules;
+    QMap<QString, QString> rules;
 
     for( int i=0 ; i<m_model->rowCount() ; i++ )
     {
         rules.insert(m_model->item(i, 0)->text(),
-                     m_model->item(i, 1)->text().toInt());
+                     m_model->item(i, 1)->text());
     }
 
     return rules;

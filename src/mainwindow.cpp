@@ -1,48 +1,56 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <iostream>
+#include <time.h>
 
-extern "C" {
-    #include "q3sdc/q3sdc.h"
-}
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    ui->setupUi(this);
+    ui->setupUi( this );
     m_SettingsDialog = NULL;
     m_selectInProgress = false;
+    m_thread = new ThreadParser();
 
     createDatabase();
 
-    m_demoModel = new SqlTableModelCheckable(this);
-    m_demoModel->setTable("demos");
-    m_demoModel->setEditStrategy(QSqlTableModel::OnFieldChange);
+    m_demoModel = new SqlTableModelCheckable( this );
+    m_demoModel->setTable( "demos" );
+    m_demoModel->setEditStrategy( QSqlTableModel::OnManualSubmit );
 
-    ui->listView->setModel(m_demoModel);
+    ui->listView->setModel( m_demoModel );
     ui->listView->setModelColumn(1);
 
     m_varModel = new QStandardItemModel(this);
     ui->varTableView->setModel(m_varModel);
 
-    connect(ui->btnInvertSelection, SIGNAL(released()), this, SLOT(invertSelection()));
-    connect(ui->btnSelectWorst, SIGNAL(released()), this, SLOT(selectWorst()));
-    connect(ui->btnUnselectAll, SIGNAL(released()), this, SLOT(unselectAll()));
-    connect(ui->actionDemos_folder, SIGNAL(triggered()), this, SLOT(openDemosDialog()));
-    connect(ui->actionSettings, SIGNAL(triggered()), this, SLOT(openSettingsDialog()));
-    connect(ui->btnPlayDemo, SIGNAL(released()), this, SLOT(playDemo()));
-    connect(ui->btnMoreInfos, SIGNAL(released()), this, SLOT(showDemoInfos()));
-    connect(ui->listView, SIGNAL(clicked(const QModelIndex &)), this, SLOT(updateDemoInfos(const QModelIndex &)));
-    connect(m_demoModel,
-            SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)),
-            this,
-            SLOT(onBoxChecked(const QModelIndex &, const QModelIndex &)));
+    connect( ui->btnInvertSelection, SIGNAL(released()), this, SLOT(invertSelection()) );
+    connect( ui->btnSelectWorst, SIGNAL(released()), this, SLOT(selectWorst()) );
+    connect( ui->btnUnselectAll, SIGNAL(released()), this, SLOT(unselectAll()) );
+    connect( ui->actionDemos_folder, SIGNAL(triggered()), this, SLOT(openDemosDialog()) );
+    connect( ui->actionSettings, SIGNAL(triggered()), this, SLOT(openSettingsDialog()) );
+    connect( ui->actionParseAll, SIGNAL(triggered()), this, SLOT(parseAllDemo()) );
+    connect( ui->btnPlayDemo, SIGNAL(released()), this, SLOT(playDemo()) );
+    connect( ui->btnMoreInfos, SIGNAL(released()), this, SLOT(onMoreInfosClicked()) );
+    connect( ui->listView, SIGNAL(clicked(const QModelIndex &)), this, SLOT(onDemoClicked(const QModelIndex &)) );
+    connect( m_thread, SIGNAL(demoParsed(int, QString, int, int)), this, SLOT(onDemoParsed(int, QString, int, int)) );
+    connect( m_thread, SIGNAL(finished()), this, SLOT(onThreadParserFinished()) );
+    connect( m_demoModel, SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)),
+             this, SLOT(onBoxChecked(const QModelIndex &, const QModelIndex &)) );
+
+    m_progressBar = new QProgressBar();
+    m_textProgressBar = new QLabel();
+    m_progressBar->setMaximum(100);
+    ui->statusBar->addPermanentWidget( m_textProgressBar );
+    ui->statusBar->addPermanentWidget( m_progressBar );
+    m_progressBar->setVisible( false );
+    m_textProgressBar->setVisible( false );
 
     initSettings();
     createDemosList();
-    ui->demoInfosBox->setVisible(false);
+    ui->demoInfosBox->setVisible( false );
     this->adjustSize();
 }
 
@@ -60,20 +68,19 @@ void MainWindow::buildSelection( QSqlQuery * query )
     QModelIndexList indexList;
 
     m_selectInProgress = true;
+
     m_demoModel->clearBox();
     while( query->next() )
     {
-        indexList = m_demoModel->match(m_demoModel->index(0, 0),
-                                       Qt::DisplayRole,
-                                       QVariant(query->value(0).toInt()).toInt());
-
+        indexList = m_demoModel->match( m_demoModel->index(0, 0),
+                                        Qt::DisplayRole,
+                                        QVariant(query->value(0).toInt()).toInt() );
         if( indexList.count() > 0 )
-            m_demoModel->setData(m_demoModel->index(indexList.at(0).row(), 1),
-                                 Qt::Checked,
-                                 Qt::CheckStateRole);
-        else
-            qDebug() << query->value(0).toInt();
-
+        {
+            m_demoModel->setData( m_demoModel->index(indexList.at(0).row(), 1),
+                                  Qt::Checked,
+                                  Qt::CheckStateRole );
+        }
     }
     m_selectInProgress = false;
     updateSelectionInfos();
@@ -86,15 +93,15 @@ void MainWindow::invertSelection()
     m_selectInProgress = true;
     for( int i=0 ; i<m_demoModel->rowCount() ; i++ )
     {
-        if( m_demoModel->data( m_demoModel->index(i, 1), Qt::CheckStateRole ) == Qt::Unchecked  )
+        if( m_demoModel->data( m_demoModel->index(i, 1), Qt::CheckStateRole ) == Qt::Unchecked )
         {
             m_demoModel->setData( m_demoModel->index(i, 1),
-                              Qt::Checked,
-                              Qt::CheckStateRole );
+                                  Qt::Checked,
+                                  Qt::CheckStateRole );
         }else{
             m_demoModel->setData( m_demoModel->index(i, 1),
-                              Qt::Unchecked,
-                              Qt::CheckStateRole );
+                                  Qt::Unchecked,
+                                  Qt::CheckStateRole );
         }
     }
     m_selectInProgress = false;
@@ -105,9 +112,9 @@ void MainWindow::invertSelection()
 
 void MainWindow::selectWorst()
 {
-    QSqlQuery query("SELECT d.id, d.map, d.physic "
-                    "FROM demos as d "
-                    "WHERE d.id NOT IN (SELECT id FROM demos AS e WHERE e.map = d.map AND e.physic = d.physic AND e.multi = d.multi ORDER BY time ASC LIMIT 0,1)");
+    QSqlQuery query( "SELECT d.id, d.map, d.physic "
+                     "FROM demos as d "
+                     "WHERE d.id NOT IN (SELECT id FROM demos AS e WHERE e.map = d.map AND e.physic = d.physic AND e.multi = d.multi ORDER BY time ASC LIMIT 0,1)" );
     buildSelection(&query);
 }
 
@@ -125,8 +132,7 @@ void MainWindow::onBoxChecked( const QModelIndex & topLeft, const QModelIndex & 
     Q_UNUSED(topLeft);
     Q_UNUSED(bottomRight);
 
-    // Speed up selection : Do not update UI when selecting worst demos,
-    // or when inverting selection
+    // Speed up selection : Do not update UI when selecting worst demos, or when inverting selection
     if( !m_selectInProgress )
     {
         updateSelectionInfos();
@@ -146,7 +152,7 @@ void MainWindow::updateSelectionInfos()
     if( !hasSelection )
         statusBar()->showMessage("");
     else
-        statusBar()->showMessage(QString(tr("%1 demo(s) selected")).arg(m_demoModel->countBoxChecked()));
+        statusBar()->showMessage( QString(tr("%1 demo(s) selected")).arg(m_demoModel->countBoxChecked()));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -214,15 +220,17 @@ bool MainWindow::createDatabase()
     }
 
     QSqlQuery query;
-    query.exec("create table demos "
-               "(id int primary key, "
-               "filename varchar(100),"
-               "map varchar(50),"
-               "multi varchar(3),"
-               "physic varchar(3),"
-               "time varchar(9),"
-               "author varchar(50),"
-               "country varchar(50))");
+    query.exec("CREATE TABLE demos "
+               "(id INT PRIMARY KEY, "
+               "filename VARCHAR(100),"
+               "map VARCHAR(50),"
+               "multi VARCHAR(3),"
+               "physic VARCHAR(3),"
+               "time VARCHAR(9),"
+               "author VARCHAR(50),"
+               "country VARCHAR(50),"
+               "player_infos TEXT,"
+               "rules BLOB)");
 
     return true;
 }
@@ -246,6 +254,8 @@ void MainWindow::createDemosList()
 
     if( !m_demoModel->removeRows(0, m_demoModel->rowCount()) )
         qDebug() << "Cannot remove rows";
+    else
+        m_demoModel->submitAll(); // Apply changement in DB
 
     for ( i=0 ; i < m_demosDir.entryInfoList().size() ; i++ )
     {
@@ -254,27 +264,68 @@ void MainWindow::createDemosList()
             nbDemos++;
             pattern.indexIn( m_demosDir.entryInfoList().at(i).fileName() );
             query.exec( QString( "INSERT INTO demos "
-                                 "VALUES (%1,'%2','%3','%4','%5','%6','%7','%8')").arg(i).arg( pattern.cap(0),
-                                                                                               pattern.cap(1),
-                                                                                               pattern.cap(2),
-                                                                                               pattern.cap(3),
-                                                                                               pattern.cap(4),
-                                                                                               pattern.cap(5),
-                                                                                               pattern.cap(6) ) );
+                                 "VALUES (%1,'%2','%3','%4','%5','%6','%7','%8', NULL, NULL)").arg(i).arg(  pattern.cap(0),
+                                                                                                            pattern.cap(1),
+                                                                                                            pattern.cap(2),
+                                                                                                            pattern.cap(3),
+                                                                                                            pattern.cap(4),
+                                                                                                            pattern.cap(5),
+                                                                                                            pattern.cap(6) ) );
         }
     }
     m_demoModel->select();
     statusBar()->showMessage( QString(tr("%1 demos found")).arg(nbDemos) );
 
-    /*query.exec( "SELECT count(*) AS count FROM demos" );
-    query.next();
-    qDebug() << "Total demos in DB : " << QVariant(query.value(0).toInt()).toInt();
-    qDebug() << "Demos checked : " << m_model->countBoxChecked();*/
+    // Avoid a strange behaviour of Sql table model. Without that, only 256 rows are talen in account.
+    // The reasons seems to be that sqlite doesn't know the number of rows affected by a "SELECT"
+    if( m_demoModel->rowCount() == 256 )
+    {
+        while(m_demoModel->canFetchMore())
+            m_demoModel->fetchMore();
+    }
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MainWindow::showDemoInfos()
+void MainWindow::onDemoParsed( int demoId, QString gameState, int current, int size )
+{
+    m_progressBar->setMaximum( size );
+    m_progressBar->setValue( size - current );
+    m_textProgressBar->setText(QString("Analyzing... %1/%2").arg(size - current).arg(size));
+
+    const QModelIndexList indexList = m_demoModel->match( m_demoModel->index(0, 0), Qt::DisplayRole, demoId);
+
+    if( indexList.count() > 0 && gameState != "")
+    {
+        parseAndSaveGameState( gameState,
+                               m_demoModel->index( indexList.at(0).row(), 8),
+                               m_demoModel->index( indexList.at(0).row(), 9) );
+
+        QModelIndexList rowSelected = ui->listView->selectionModel()->selectedIndexes();
+
+        // If the demo parsed correspond to the demo selected, we display info
+        if( !rowSelected.isEmpty() && rowSelected.at(0).row() == indexList.at(0).row() )
+        {
+            displayDemosInfos( rowSelected.at(0).row() );
+        }
+    }
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+void MainWindow::onThreadParserFinished()
+{
+    m_progressBar->setValue(0);
+    m_textProgressBar->setText("");
+    m_progressBar->setVisible(false);
+    m_textProgressBar->setVisible(false);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+void MainWindow::onMoreInfosClicked()
 {
     ui->demoInfosBox->setVisible( !ui->demoInfosBox->isVisible() );
     this->adjustSize();
@@ -282,11 +333,90 @@ void MainWindow::showDemoInfos()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MainWindow::updateDemoInfos(const QModelIndex & index)
+void MainWindow::displayDemosInfos( int row )
 {
-    //if( ui->demoInfosBox->)
-    //m_demoModel->index(index.row(), index.column()).data().isNull();
-    parseDemo();
+    const QStringList & rulesList = m_demoModel->data( m_demoModel->index( row, 8 ), Qt::DisplayRole ).toString().split ( "\\", QString::SkipEmptyParts );
+    const QStringList & playerInfoList = m_demoModel->data( m_demoModel->index( row, 9 ), Qt::DisplayRole ).toString().split ( "\\", QString::SkipEmptyParts );
+    int i = 0;
+    QMap<QString, QString>::iterator it;
+
+    QMap<QString, QString> rulesMap;
+    QStringList pair;
+    for( i = 0 ; i < rulesList.size() ; i++ )
+    {
+        pair = rulesList.at(i).split ( "=", QString::SkipEmptyParts );
+        rulesMap.insert( pair.at(0), pair.at(1) );
+    }
+
+    m_varModel->clear();
+    m_varModel->setRowCount( m_rules.size() );
+    m_varModel->setColumnCount(2);
+
+    // Display rules
+
+    it = m_rules.begin();
+    i = 0;
+    while( it != m_rules.end() )
+    {
+        // Insert key
+        QStandardItem *itemKey = new QStandardItem( it.key() );
+        itemKey->setEditable(false);
+        m_varModel->setItem( i, 0, itemKey );
+
+        // Insert value
+        QStandardItem *itemValue;
+        if( rulesMap.contains( it.key() ) )
+        {
+            itemValue = new QStandardItem( rulesMap.value( it.key() ) );
+            if( rulesMap.value( it.key() ) == it.value() )
+                itemValue->setIcon(QIcon(":/image/valid"));
+            else
+                itemValue->setIcon(QIcon(":/image/warning"));
+        }else{
+            itemValue = new QStandardItem("?");
+        }
+        itemValue->setEditable(false);
+        m_varModel->setItem( i, 1, itemValue );
+
+        it++;
+        i++;
+    }
+
+    ui->varTableView->resizeColumnsToContents();
+    m_varModel->sort(0);
+
+    // Display player(s) infos
+
+    QMap<QString, QString> playerInfoMap;
+    for( i = 0 ; i < playerInfoMap.size() ; i++ )
+    {
+        pair = playerInfoList.at(i).split( "=", QString::SkipEmptyParts );
+        playerInfoMap.insert( pair.at(0), pair.at(1) );
+    }
+
+    ui->frameDemo->setText( m_demoModel->data( m_demoModel->index( row, 9 ), Qt::DisplayRole).toString() );
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+void MainWindow::onDemoClicked( const QModelIndex & index )
+{
+    const QModelIndex & RulesIndex = m_demoModel->index(index.row(), 8);
+    const QModelIndex & PlayerInfoIndex = m_demoModel->index(index.row(), 9);
+
+    if( ui->demoInfosBox->isVisible() )
+    {
+        if( m_demoModel->data( PlayerInfoIndex, Qt::DisplayRole ).toString() == "" )
+        {
+            QPair<int, QString> pair;
+            pair.first = m_demoModel->data( m_demoModel->index(index.row(), 0), Qt::DisplayRole ).toInt();
+            pair.second = m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(index.row(), 1), Qt::DisplayRole ).toString();
+            m_thread->addOneDemo(pair);
+
+        }else{
+            displayDemosInfos( index.row() );
+        }
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -323,67 +453,78 @@ void MainWindow::playDemo()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MainWindow::parseDemo()
+void MainWindow::parseAllDemo()
 {
-    QModelIndexList indexList = ui->listView->selectionModel()->selectedIndexes();
-    QString file = m_demosDir.absolutePath() + "/" + indexList.at(0).data().toString();
-    int i, j;
-
-    // Parse demo
-    qDebug() << "-- Parsing";
-    QString demoInfo( q3sdc_parse( file.toAscii().data() ) );
-
-    // Parse infos
-    if( demoInfo != "" )
+    QList<QPair<int, QString> > demosList;
+    QPair<int, QString> pair;
+    for( int i=0 ; i<m_demoModel->rowCount() ; i++ )
     {
-        // Convert \sv_floodProtect\1\sv_maxPing\0\sv_minPing\0
-        // To sv_floodProtect=1\sv_maxPing=0\sv_minPing=0
-        if( demoInfo[0] == '\\' )
-            demoInfo.remove( 0, 1 );
-
-        i = 0;
-        j = 0;
-        while( i < demoInfo.size() )
+        if( m_demoModel->data( m_demoModel->index(i, 8), Qt::DisplayRole ).toString() == "" )
         {
-            if( demoInfo[i] == '\\' )
-            {
-                if( j%2 == 0 )
-                    demoInfo[i] = '=';
-                j++;
-            }
-            i++;
+            pair.first = m_demoModel->data( m_demoModel->index(i, 0), Qt::DisplayRole ).toInt();
+            pair.second = m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(i, 1), Qt::DisplayRole ).toString();
+            demosList.append( pair );
         }
-
-        // Create list of key/value.
-        QStringList list = demoInfo.split ( "\\", QString::SkipEmptyParts );
-        QStringList pair;
-        int row;
-
-        //list.indexOf()
-
-        m_varModel->clear();
-        m_varModel->setRowCount(list.size());
-        m_varModel->setColumnCount(2);
-
-        row = 0;
-        while( row < list.size() )
-        {
-            pair = list.at(row).split( "=", QString::KeepEmptyParts );
-
-            QStandardItem *itemKey = new QStandardItem(QString("%0").arg(pair.at(0)));
-            itemKey->setEditable(false);
-            m_varModel->setItem(row, 0, itemKey);
-
-            QStandardItem *itemValue = new QStandardItem(QString("%0").arg(pair.at(1)));
-            m_varModel->setItem(row, 1, itemValue);
-            row++;
-        }
-
-        ui->varTableView->resizeColumnsToContents();
-
-    }else{
-        qDebug() << "-- Cannot parse demo";
     }
+
+    if( !demosList.isEmpty() )
+    {
+        m_progressBar->setVisible( true );
+        m_textProgressBar->setVisible( true );
+        m_thread->addDemos( &demosList );
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+void MainWindow::parseAndSaveGameState( QString gameState,
+                                        QModelIndex rulesIndex,
+                                        QModelIndex playerInfoIndex )
+{
+    // Convert \sv_floodProtect\1\sv_maxPing\0\sv_minPing\0
+    // To sv_floodProtect=1\sv_maxPing=0\sv_minPing=0
+    if( gameState[0] == '\\' )
+        gameState.remove( 0, 1 );
+
+    int i = 0;
+    int j = 0;
+    while( i < gameState.size() )
+    {
+        if( gameState[i] == '\\' )
+        {
+            if( j%2 == 0 )
+                gameState[i] = '=';
+            j++;
+        }
+        i++;
+    }
+
+    // Create list of key/value.
+    QStringList propertyStringList = gameState.split ( "\\", QString::SkipEmptyParts );
+    // Store one pair of key/value
+    QStringList property;
+    // Contains the list of rules saved in the model (sv_fps, timescale etc...)
+    QString demoRules;
+    // Contains demos informations saved in the model (Player name, head model etc...)
+    QString playerInfos;
+
+    int row = 0;
+    while( row < propertyStringList.size() )
+    {
+        property = propertyStringList.at(row).split( "=", QString::KeepEmptyParts );
+
+        if( m_rules.contains( property.at(0) ) )
+            demoRules += propertyStringList.at(row) + "\\";
+        else if( property.at(0) == "n" )
+            playerInfos += "Name = " + property.at(1) + "\\";
+        else if( property.at(0) == "hmodel" )
+            playerInfos += "Head = " + property.at(1) + "\\";
+
+        row++;
+    }
+
+    m_demoModel->setData( rulesIndex, demoRules, Qt::EditRole );
+    m_demoModel->setData( playerInfoIndex, playerInfos, Qt::EditRole );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -392,16 +533,16 @@ void MainWindow::initSettings()
 {
     if( !QFile::exists(CFG_FILE) )
     {
-        m_rules.insert("timescale", 1);
-        m_rules.insert("g_synchronousClients", 1);
-        m_rules.insert("pmove_fixed", 0);
-        m_rules.insert("pmove_msec", 8);
-        m_rules.insert("sv_fps", 125);
-        m_rules.insert("com_maxfps", 125);
-        m_rules.insert("g_speed", 320);
-        m_rules.insert("g_gravity", 800);
-        m_rules.insert("g_knockback", 1000);
-        m_rules.insert("sv_cheats", 0);
+        m_rules.insert("timescale", "1");
+        m_rules.insert("g_synchronousClients", "1");
+        m_rules.insert("pmove_fixed", "0");
+        m_rules.insert("pmove_msec", "8");
+        m_rules.insert("defrag_svfps", "125");
+        m_rules.insert("defrag_clfps", "125");
+        m_rules.insert("g_speed", "320");
+        m_rules.insert("g_gravity", "800");
+        m_rules.insert("g_knockback", "1000");
+        m_rules.insert("sv_cheats", "0");
         m_engineFile = "";
         m_demosDir = QDir::home();
         saveSettings();
@@ -418,7 +559,7 @@ void MainWindow::initSettings()
         settings.beginGroup("rules");
         keys = settings.childKeys();
         for (int i = 0; i < keys.size(); ++i)
-            m_rules.insert( keys.at(i), settings.value(keys.at(i),"").toInt() );
+            m_rules.insert( keys.at(i), settings.value(keys.at(i),"").toString() );
         settings.endGroup();
     }
 }
@@ -427,7 +568,7 @@ void MainWindow::initSettings()
 
 void MainWindow::saveSettings()
 {
-    QMap<QString, int>::iterator it;
+    QMap<QString, QString>::iterator it;
     QSettings settings(CFG_FILE, QSettings::IniFormat, this);
 
     if( !settings.isWritable() )
@@ -452,6 +593,3 @@ void MainWindow::saveSettings()
     }
     settings.endGroup();
 }
-
-
-

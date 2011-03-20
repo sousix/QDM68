@@ -3,8 +3,8 @@
         <file>images/diagram_16.png</file>
         <file>images/folder_16.png</file>
         <file>images/gear_16.png</file>
-        <file>images/tick_16.png</file>
-        <file>images/warning_16.png</file>
+        <file alias="valid">images/tick_16.png</file>
+        <file alias="warning">images/warning_16.png</file>
         <file>images/play_24.png</file>
     </qresource>
 </RCC>

@@ -25,6 +25,9 @@ public:
 private:
     QSet<QPersistentModelIndex> checklist; // List of checked box. Empty at startup.
 
+    QFont fontBold;
+    QFont fontNormal;
+
 };
 
 #endif // SQLTABLEMODELCHECKABLE_H

@@ -17,8 +17,8 @@ public:
     explicit SettingsDialog(QWidget *parent = 0);
     ~SettingsDialog();
 
-    void setRules(QMap<QString, int> * rules);
-    QMap<QString, int> getRules();
+    void setRules(QMap<QString, QString> * rules);
+    QMap<QString, QString> getRules();
 
     QString getEngineFilename();
     void setEngineFilename(QString filename);
