@@ -387,14 +387,14 @@ void MainWindow::displayDemosInfos( int row )
 
     // Display player(s) infos
 
-    QMap<QString, QString> playerInfoMap;
+    /*QMap<QString, QString> playerInfoMap;
     for( i = 0 ; i < playerInfoMap.size() ; i++ )
     {
         pair = playerInfoList.at(i).split( "=", QString::SkipEmptyParts );
         playerInfoMap.insert( pair.at(0), pair.at(1) );
-    }
+    }*/
 
-    ui->frameDemo->setText( m_demoModel->data( m_demoModel->index( row, 9 ), Qt::DisplayRole).toString() );
+    ui->frameDemo->setHtml( m_demoModel->data( m_demoModel->index( row, 9 ), Qt::DisplayRole).toString() );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -508,7 +508,11 @@ void MainWindow::parseAndSaveGameState( QString gameState,
     // Contains demos informations saved in the model (Player name, head model etc...)
     QString playerInfos;
 
-    int row = 0;
+    int row = 0, nbplayer = 0;
+    QResource resource;
+    QStringList headModel;
+    QString playerName("");
+    playerInfos = "<table valign=\"middle\">";
     while( row < propertyStringList.size() )
     {
         property = propertyStringList.at(row).split( "=", QString::KeepEmptyParts );
@@ -516,12 +520,37 @@ void MainWindow::parseAndSaveGameState( QString gameState,
         if( m_rules.contains( property.at(0) ) )
             demoRules += propertyStringList.at(row) + "\\";
         else if( property.at(0) == "n" )
-            playerInfos += "Name = " + property.at(1) + "\\";
+            playerName = property.at(1);
         else if( property.at(0) == "hmodel" )
-            playerInfos += "Head = " + property.at(1) + "\\";
+        {
+            headModel = property.at(1).split( "/", QString::SkipEmptyParts );
+            // Sometimes, we have player type (i.e : klesk), but not skin (i.e : red)
+            if( headModel.size() != 2 )
+                resource.setFileName( QString(":/image/%1/default").arg( headModel.at(0) ) );
+            else
+                resource.setFileName( QString(":/image/%1").arg( property.at(1) ) );
 
+            // Check that model exists. If it's a special model not in resource, we use the default skin
+            if( !resource.isValid() )
+                resource.setFileName( QString(":/image/%1/default").arg( headModel.at(0) ) );
+        }
+        if( playerName != "" && headModel.size() > 0 )
+        {
+            nbplayer++;
+            playerInfos += "<tr><td bgcolor=\"black\"><img width=\"$size\" width=\"$size\" src=\"" + resource.fileName() + "\"></td><td> " + playerName + "<td></tr>";
+            playerName = "";
+            headModel.clear();
+        }
         row++;
     }
+    playerInfos += "</table>";
+
+    if( nbplayer > 3 )
+        playerInfos.replace("$size","28");
+    else
+        playerInfos.replace("$size","48");
+
+
 
     m_demoModel->setData( rulesIndex, demoRules, Qt::EditRole );
     m_demoModel->setData( playerInfoIndex, playerInfos, Qt::EditRole );
