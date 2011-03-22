@@ -525,10 +525,13 @@ void MainWindow::parseAndSaveGameState( QString gameState,
         {
             headModel = property.at(1).split( "/", QString::SkipEmptyParts );
             // Sometimes, we have player type (i.e : klesk), but not skin (i.e : red)
-            if( headModel.size() != 2 )
+            if( headModel.size() == 2 )
+                resource.setFileName( QString(":/image/%1").arg( property.at(1) ) );
+            else if ( headModel.size() == 1 )
                 resource.setFileName( QString(":/image/%1/default").arg( headModel.at(0) ) );
             else
-                resource.setFileName( QString(":/image/%1").arg( property.at(1) ) );
+                // Skin not found ??????????
+                resource.setFileName( QString(":/image/sarge/default") );
 
             // Check that model exists. If it's a special model not in resource, we use the default skin
             if( !resource.isValid() )
@@ -537,7 +540,9 @@ void MainWindow::parseAndSaveGameState( QString gameState,
         if( playerName != "" && headModel.size() > 0 )
         {
             nbplayer++;
-            playerInfos += "<tr><td bgcolor=\"black\"><img width=\"$size\" width=\"$size\" src=\"" + resource.fileName() + "\"></td><td> " + playerName + "<td></tr>";
+            playerInfos += "<tr><td bgcolor=\"black\"><img width=\"$size\" width=\"$size\" src=\""
+                           + resource.fileName() + "\"></td><td bgcolor=\"#dddddd\" width=\"100%\"> " + HtmlPlayerName( playerName ) + "<td></tr>";
+
             playerName = "";
             headModel.clear();
         }
@@ -621,4 +626,31 @@ void MainWindow::saveSettings()
         it++;
     }
     settings.endGroup();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+QString MainWindow::HtmlPlayerName( QString name )
+{
+    int balises = name.count( QRegExp("\\^[0-9]") );
+
+    name.replace( "^0", "<font color=\"#000000\">" ); // black
+    name.replace( "^1", "<font color=\"#ff0000\">" ); // red
+    name.replace( "^2", "<font color=\"#00ff00\">" ); // green
+    name.replace( "^3", "<font color=\"#ffff00\">" ); // yellow
+    name.replace( "^4", "<font color=\"#0000ff\">" ); // blue
+    name.replace( "^5", "<font color=\"#00ffff\">" ); // aqua (cyan)
+    name.replace( "^6", "<font color=\"#ff00ff\">" ); // fuchsia (magenta)
+    name.replace( "^7", "<font color=\"#ffffff\">" ); // white
+    name.replace( "^8", "<font color=\"orange\">" );  // orange
+    name.replace( "^9", "<font color=\"grey\">" );    // Grey
+
+    for( int i=0 ; i<balises ; i++ )
+        name.append("</font>");
+
+    // Set default color to 'White'
+    name.prepend("<font color=\"#ffffff\">");
+    name.prepend("</font>");
+
+    return name;
 }

@@ -21,6 +21,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow( QWidget *parent = 0 );
     ~MainWindow();
+    static QString HtmlPlayerName( QString );
 
 protected:
     bool createDatabase();
