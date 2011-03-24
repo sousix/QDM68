@@ -530,7 +530,7 @@ void MainWindow::parseAndSaveGameState( QString gameState,
             else if ( headModel.size() == 1 )
                 resource.setFileName( QString(":/image/%1/default").arg( headModel.at(0) ) );
             else
-                // Skin not found ??????????
+                // Skin not found ???
                 resource.setFileName( QString(":/image/sarge/default") );
 
             // Check that model exists. If it's a special model not in resource, we use the default skin
@@ -541,7 +541,7 @@ void MainWindow::parseAndSaveGameState( QString gameState,
         {
             nbplayer++;
             playerInfos += "<tr><td bgcolor=\"black\"><img width=\"$size\" width=\"$size\" src=\""
-                           + resource.fileName() + "\"></td><td bgcolor=\"#dddddd\" width=\"100%\"> " + HtmlPlayerName( playerName ) + "<td></tr>";
+                           + resource.fileName() + "\"></td><td bgcolor=\"#cccccc\" width=\"100%\"> " + HtmlPlayerName( playerName ) + "<td></tr>";
 
             playerName = "";
             headModel.clear();
@@ -571,8 +571,8 @@ void MainWindow::initSettings()
         m_rules.insert("g_synchronousClients", "1");
         m_rules.insert("pmove_fixed", "0");
         m_rules.insert("pmove_msec", "8");
-        m_rules.insert("defrag_svfps", "125");
-        m_rules.insert("defrag_clfps", "125");
+        m_rules.insert("sv_fps", "125");
+        m_rules.insert("com_maxfps", "125");
         m_rules.insert("g_speed", "320");
         m_rules.insert("g_gravity", "800");
         m_rules.insert("g_knockback", "1000");
@@ -650,7 +650,7 @@ QString MainWindow::HtmlPlayerName( QString name )
 
     // Set default color to 'White'
     name.prepend("<font color=\"#ffffff\">");
-    name.prepend("</font>");
+    name.append("</font>");
 
     return name;
 }

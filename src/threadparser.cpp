@@ -39,6 +39,8 @@ void ThreadParser::run()
     {
         msleep(5);
         gameState = q3sdc_parse( m_demosList.at(0).second.toAscii().data() );
+        gameState.replace("defrag_clfps", "com_maxfps");
+        gameState.replace("defrag_svfps", "sv_fps");
         emit( demoParsed( m_demosList.at(0).first, gameState, m_demosList.size(), m_size ) );
         m_demosList.removeFirst();
     }
