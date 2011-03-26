@@ -7,6 +7,7 @@
 #include "sqltablemodelcheckable.h"
 #include "settingsdialog.h"
 #include "threadparser.h"
+#include "listviewcustom.h"
 
 #define CFG_FILE "qdm68.cfg"
 
@@ -24,26 +25,26 @@ public:
     static QString HtmlPlayerName( QString );
 
 protected:
+    void buildRulesList();
+    void buildSelection( QSqlQuery * );
     bool createDatabase();
-    void setSelection( QSqlQuery * );
     void createDemosList();
-    void initSettings();
-    void saveSettings();
     void updateSelectionInfos();
     void parseAndSaveGameState( QString, QModelIndex, QModelIndex );
     void displayDemosInfos( int );
+    void initSettings();
+    void saveSettings();
 
 protected slots:
     void invertSelection();
     void selectWorst();
     void unselectAll();
     void onBoxChecked( const QModelIndex &, const QModelIndex & );
-    void buildSelection( QSqlQuery * );
     void openDemosDialog();
     void openSettingsDialog();
     void playDemo();
     void parseAllDemo();
-    void onDemoClicked( const QModelIndex & );
+    void onDemoHighlighted( const QModelIndex & );
     void onMoreInfosClicked();
     void onDemoParsed( int, QString, int, int );
     void onThreadParserFinished();

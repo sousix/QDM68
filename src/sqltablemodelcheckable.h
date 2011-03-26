@@ -4,7 +4,7 @@
 #include <QtSql>
 
 /*
- Subclass QSqlTableModel to support checkbox data (QSet<QPersistentModelIndex>)
+ Subclass QSqlTableModel to support checkbox data (using QSet<QPersistentModelIndex>)
  */
 
 class SqlTableModelCheckable : public QSqlTableModel
@@ -24,7 +24,6 @@ public:
 
 private:
     QSet<QPersistentModelIndex> checklist; // List of checked box. Empty at startup.
-
     QFont fontBold;
     QFont fontNormal;
 

@@ -10,7 +10,7 @@ SqlTableModelCheckable::SqlTableModelCheckable(QObject * parent, QSqlDatabase db
 
 Qt::ItemFlags SqlTableModelCheckable::flags(const QModelIndex &index) const
 {
-    return ((QSqlTableModel::flags(index) | Qt::ItemIsUserCheckable ) & ~Qt::ItemIsEditable);
+    return ( (QSqlTableModel::flags(index) | Qt::ItemIsUserCheckable ) & ~Qt::ItemIsEditable );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,15 +43,15 @@ bool SqlTableModelCheckable::setData(const QModelIndex& index, const QVariant& v
     if( role == Qt::CheckStateRole && index.column() == 1 )
     {
         if ( value == Qt::Checked )
-            checklist.insert(index);
+            checklist.insert( index );
         else
-            checklist.remove(index);
+            checklist.remove( index );
 
-        emit dataChanged(index, index);
+        emit dataChanged( index, index );
         return true;
     }
 
-    return QSqlTableModel::setData(index, value, role);
+    return QSqlTableModel::setData( index, value, role );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,20 +59,21 @@ bool SqlTableModelCheckable::setData(const QModelIndex& index, const QVariant& v
 bool SqlTableModelCheckable::removeRows ( int position, int rows, const QModelIndex & parent )
 {
     QSet<QPersistentModelIndex>::iterator it;
+    int i;
 
     if( checklist.count() > 0 )
     {
         // Delete checked box for deleted rows
-        beginRemoveRows(QModelIndex(), position, position+rows-1);
-        for (int i = 0; i < rows && checklist.count() > 0; ++i)
+        beginRemoveRows( QModelIndex(), position, position+rows-1 );
+        for ( i = 0; i < rows && checklist.count() > 0; ++i )
         {
             it = checklist.begin();
             while ( it != checklist.end() )
             {
                 if( (*it).row() == i )
                 {
-                    checklist.erase(it);
-                    emit dataChanged(*it, *it);
+                    checklist.erase( it );
+                    emit dataChanged( *it, *it );
                     break;
                 }
                 ++it;
@@ -81,7 +82,7 @@ bool SqlTableModelCheckable::removeRows ( int position, int rows, const QModelIn
         endRemoveRows();
     }
 
-    QSqlTableModel::removeRows(position, rows, parent);
+    QSqlTableModel::removeRows( position, rows, parent );
 
     return true;
 }
@@ -90,7 +91,7 @@ bool SqlTableModelCheckable::removeRows ( int position, int rows, const QModelIn
 
 bool SqlTableModelCheckable::hasBoxChecked()
 {
-    return (checklist.count() > 0);
+    return ( checklist.count() > 0 );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -105,5 +106,5 @@ int SqlTableModelCheckable::countBoxChecked()
 void SqlTableModelCheckable::clearBox()
 {
     checklist.clear();
-    emit dataChanged(QModelIndex(), QModelIndex());
+    emit dataChanged( QModelIndex(), QModelIndex() );
 }

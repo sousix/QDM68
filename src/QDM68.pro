@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     q3sdc/huff.c \
     q3sdc/dump.c \
     q3sdc/common.c \
-    threadparser.cpp
+    threadparser.cpp \
+    listviewcustom.cpp
 
 HEADERS  += mainwindow.h \
     sqltablemodelcheckable.h \
@@ -31,7 +32,8 @@ HEADERS  += mainwindow.h \
     q3sdc/common.h \
     q3sdc/dump.h \
     q3sdc/parse.h \
-    threadparser.h
+    threadparser.h \
+    listviewcustom.h
 
 FORMS    += mainwindow.ui \
     settingsdialog.ui

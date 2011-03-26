@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect( ui->actionParseAll, SIGNAL(triggered()), this, SLOT(parseAllDemo()) );
     connect( ui->btnPlayDemo, SIGNAL(released()), this, SLOT(playDemo()) );
     connect( ui->btnMoreInfos, SIGNAL(released()), this, SLOT(onMoreInfosClicked()) );
-    connect( ui->listView, SIGNAL(clicked(const QModelIndex &)), this, SLOT(onDemoClicked(const QModelIndex &)) );
+    connect( ui->listView, SIGNAL(selectionChanged(const QModelIndex &)), this, SLOT(onDemoHighlighted(const QModelIndex &)) );
     connect( m_thread, SIGNAL(demoParsed(int, QString, int, int)), this, SLOT(onDemoParsed(int, QString, int, int)) );
     connect( m_thread, SIGNAL(finished()), this, SLOT(onThreadParserFinished()) );
     connect( m_demoModel, SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)),
@@ -50,6 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     initSettings();
     createDemosList();
+    buildRulesList();
     ui->demoInfosBox->setVisible( false );
     this->adjustSize();
 }
@@ -84,6 +85,40 @@ void MainWindow::buildSelection( QSqlQuery * query )
     }
     m_selectInProgress = false;
     updateSelectionInfos();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Only display list of rules without values
+void MainWindow::buildRulesList()
+{
+    int i;
+    QMap<QString, QString>::iterator it;
+
+    m_varModel->clear();
+    m_varModel->setRowCount( m_rules.size() );
+    m_varModel->setColumnCount(2);
+
+    it = m_rules.begin();
+    i = 0;
+    while( it != m_rules.end() )
+    {
+        // Insert key
+        QStandardItem *item = new QStandardItem( it.key() );
+        item->setEditable(false);
+        m_varModel->setItem( i, 0, item );
+
+        // Insert empty value
+        item = new QStandardItem("");
+        item->setEditable(false);
+        m_varModel->setItem( i, 1, item );
+
+        i++;
+        it++;
+    }
+
+    ui->varTableView->resizeColumnsToContents();
+    m_varModel->sort(0);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -348,74 +383,59 @@ void MainWindow::displayDemosInfos( int row )
         rulesMap.insert( pair.at(0), pair.at(1) );
     }
 
-    m_varModel->clear();
-    m_varModel->setRowCount( m_rules.size() );
-    m_varModel->setColumnCount(2);
-
     // Display rules
 
-    it = m_rules.begin();
-    i = 0;
-    while( it != m_rules.end() )
+    QString varRefName = "";
+    QString varRefValue = "";
+    QString varDemoValue = "";
+
+    for( i = 0 ; i < m_varModel->rowCount() ; i++ )
     {
-        // Insert key
-        QStandardItem *itemKey = new QStandardItem( it.key() );
-        itemKey->setEditable(false);
-        m_varModel->setItem( i, 0, itemKey );
+        varRefName = m_varModel->item( i , 0 )->data( Qt::DisplayRole ).toString();
+        varRefValue = m_rules.value( m_varModel->item( i , 0 )->data( Qt::DisplayRole ).toString() );
+        varDemoValue = rulesMap.value( m_varModel->item( i , 0 )->data( Qt::DisplayRole ).toString() );
 
-        // Insert value
-        QStandardItem *itemValue;
-        if( rulesMap.contains( it.key() ) )
+        if( rulesMap.contains( varRefName ) )
         {
-            itemValue = new QStandardItem( rulesMap.value( it.key() ) );
-            if( rulesMap.value( it.key() ) == it.value() )
-                itemValue->setIcon(QIcon(":/image/valid"));
-            else
-                itemValue->setIcon(QIcon(":/image/warning"));
-        }else{
-            itemValue = new QStandardItem("?");
-        }
-        itemValue->setEditable(false);
-        m_varModel->setItem( i, 1, itemValue );
+            m_varModel->setData( m_varModel->item( i , 1 )->index(), varDemoValue );
+            m_varModel->item( i , 1 )->setEnabled( true );
 
-        it++;
-        i++;
+            if( varRefValue == varDemoValue )
+                m_varModel->item( i , 1 )->setIcon( QIcon(":/image/valid") );
+            else
+                m_varModel->item( i , 1 )->setIcon( QIcon(":/image/warning") );
+
+        }else{
+            m_varModel->setData( m_varModel->item( i , 1 )->index(), "Unavailable" );
+            m_varModel->item( i , 1 )->setIcon( QIcon() );
+            m_varModel->item( i , 1 )->setEnabled( false );
+        }
     }
 
-    ui->varTableView->resizeColumnsToContents();
-    m_varModel->sort(0);
 
     // Display player(s) infos
-
-    /*QMap<QString, QString> playerInfoMap;
-    for( i = 0 ; i < playerInfoMap.size() ; i++ )
-    {
-        pair = playerInfoList.at(i).split( "=", QString::SkipEmptyParts );
-        playerInfoMap.insert( pair.at(0), pair.at(1) );
-    }*/
 
     ui->frameDemo->setHtml( m_demoModel->data( m_demoModel->index( row, 9 ), Qt::DisplayRole).toString() );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MainWindow::onDemoClicked( const QModelIndex & index )
+void MainWindow::onDemoHighlighted( const QModelIndex & index )
 {
-    const QModelIndex & RulesIndex = m_demoModel->index(index.row(), 8);
+    if( !ui->demoInfosBox->isVisible() )
+        return;
+
     const QModelIndex & PlayerInfoIndex = m_demoModel->index(index.row(), 9);
 
-    if( ui->demoInfosBox->isVisible() )
+    if( m_demoModel->data( PlayerInfoIndex, Qt::DisplayRole ).toString() == "" )
     {
-        if( m_demoModel->data( PlayerInfoIndex, Qt::DisplayRole ).toString() == "" )
-        {
-            QPair<int, QString> pair;
-            pair.first = m_demoModel->data( m_demoModel->index(index.row(), 0), Qt::DisplayRole ).toInt();
-            pair.second = m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(index.row(), 1), Qt::DisplayRole ).toString();
-            m_thread->addOneDemo(pair);
+        QPair<int, QString> pair;
+        pair.first = m_demoModel->data( m_demoModel->index(index.row(), 0), Qt::DisplayRole ).toInt();
+        pair.second = m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(index.row(), 1), Qt::DisplayRole ).toString();
+        m_thread->addOneDemo(pair);
 
-        }else{
-            displayDemosInfos( index.row() );
-        }
+    }else{
+        displayDemosInfos( index.row() );
     }
 }
 
@@ -541,7 +561,10 @@ void MainWindow::parseAndSaveGameState( QString gameState,
         {
             nbplayer++;
             playerInfos += "<tr><td bgcolor=\"black\"><img width=\"$size\" width=\"$size\" src=\""
-                           + resource.fileName() + "\"></td><td bgcolor=\"#cccccc\" width=\"100%\"> " + HtmlPlayerName( playerName ) + "<td></tr>";
+                           + resource.fileName()
+                           + "\"></td><td bgcolor=\"#cccccc\" width=\"100%\"> "
+                           + "<b>" + HtmlPlayerName( playerName ) + "</b>"
+                           + "<td></tr>";
 
             playerName = "";
             headModel.clear();
@@ -635,10 +658,10 @@ QString MainWindow::HtmlPlayerName( QString name )
     int balises = name.count( QRegExp("\\^[0-9]") );
 
     name.replace( "^0", "<font color=\"#000000\">" ); // black
-    name.replace( "^1", "<font color=\"#ff0000\">" ); // red
-    name.replace( "^2", "<font color=\"#00ff00\">" ); // green
+    name.replace( "^1", "<font color=\"#dd0000\">" ); // red
+    name.replace( "^2", "<font color=\"#00dd00\">" ); // green
     name.replace( "^3", "<font color=\"#ffff00\">" ); // yellow
-    name.replace( "^4", "<font color=\"#0000ff\">" ); // blue
+    name.replace( "^4", "<font color=\"#0000dd\">" ); // blue
     name.replace( "^5", "<font color=\"#00ffff\">" ); // aqua (cyan)
     name.replace( "^6", "<font color=\"#ff00ff\">" ); // fuchsia (magenta)
     name.replace( "^7", "<font color=\"#ffffff\">" ); // white
