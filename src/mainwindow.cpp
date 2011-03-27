@@ -29,6 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect( ui->btnInvertSelection, SIGNAL(released()), this, SLOT(invertSelection()) );
     connect( ui->btnSelectWorst, SIGNAL(released()), this, SLOT(selectWorst()) );
     connect( ui->btnUnselectAll, SIGNAL(released()), this, SLOT(unselectAll()) );
+    connect( ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()) );
     connect( ui->actionDemos_folder, SIGNAL(triggered()), this, SLOT(openDemosDialog()) );
     connect( ui->actionSettings, SIGNAL(triggered()), this, SLOT(openSettingsDialog()) );
     connect( ui->actionParseAll, SIGNAL(triggered()), this, SLOT(parseAllDemo()) );
