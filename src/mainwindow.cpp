@@ -40,18 +40,17 @@ MainWindow::MainWindow(QWidget *parent) :
     connect( m_demoModel, SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)),
              this, SLOT(onBoxChecked(const QModelIndex &, const QModelIndex &)) );
 
-    m_progressBar = new QProgressBar();
     m_textProgressBar = new QLabel();
-    m_progressBar->setMaximum(100);
     ui->statusBar->addPermanentWidget( m_textProgressBar );
-    ui->statusBar->addPermanentWidget( m_progressBar );
-    m_progressBar->setVisible( false );
     m_textProgressBar->setVisible( false );
 
     initSettings();
     createDemosList();
     buildRulesList();
+
     ui->demoInfosBox->setVisible( false );
+    emptyDemoInfos();
+
     this->adjustSize();
 }
 
@@ -227,6 +226,10 @@ void MainWindow::openSettingsDialog()
             m_rules = m_SettingsDialog->getRules();
             m_engineFile = m_SettingsDialog->getEngineFilename();
             saveSettings();
+
+            // Refresh variable list for current demo
+            if( currentDemo().isValid() )
+                displayDemosInfos( currentDemo().row() );
         }
     }else{
         if( m_SettingsDialog->hasChanged() )
@@ -319,14 +322,13 @@ void MainWindow::createDemosList()
             m_demoModel->fetchMore();
     }
 
+    emptyDemoInfos();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 void MainWindow::onDemoParsed( int demoId, QString gameState, int current, int size )
 {
-    m_progressBar->setMaximum( size );
-    m_progressBar->setValue( size - current );
     m_textProgressBar->setText(QString("Analyzing... %1/%2").arg(size - current).arg(size));
 
     const QModelIndexList indexList = m_demoModel->match( m_demoModel->index(0, 0), Qt::DisplayRole, demoId);
@@ -337,24 +339,19 @@ void MainWindow::onDemoParsed( int demoId, QString gameState, int current, int s
                                m_demoModel->index( indexList.at(0).row(), 8),
                                m_demoModel->index( indexList.at(0).row(), 9) );
 
-        QModelIndexList rowSelected = ui->listView->selectionModel()->selectedIndexes();
-
         // If the demo parsed correspond to the demo selected, we display info
-        if( !rowSelected.isEmpty() && rowSelected.at(0).row() == indexList.at(0).row() )
+        if( currentDemo().row() == indexList.at(0).row() )
         {
-            displayDemosInfos( rowSelected.at(0).row() );
+            displayDemosInfos( indexList.at(0).row() );
         }
     }
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 void MainWindow::onThreadParserFinished()
 {
-    m_progressBar->setValue(0);
     m_textProgressBar->setText("");
-    m_progressBar->setVisible(false);
     m_textProgressBar->setVisible(false);
 }
 
@@ -364,30 +361,40 @@ void MainWindow::onMoreInfosClicked()
 {
     ui->demoInfosBox->setVisible( !ui->demoInfosBox->isVisible() );
     this->adjustSize();
+
+    if( currentDemo().isValid() )
+        onDemoHighlighted( currentDemo() );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 void MainWindow::displayDemosInfos( int row )
-{
+{  
+    int i;
     const QStringList & rulesList = m_demoModel->data( m_demoModel->index( row, 8 ), Qt::DisplayRole ).toString().split ( "\\", QString::SkipEmptyParts );
-    const QStringList & playerInfoList = m_demoModel->data( m_demoModel->index( row, 9 ), Qt::DisplayRole ).toString().split ( "\\", QString::SkipEmptyParts );
-    int i = 0;
     QMap<QString, QString>::iterator it;
 
-    QMap<QString, QString> rulesMap;
-    QStringList pair;
-    for( i = 0 ; i < rulesList.size() ; i++ )
-    {
-        pair = rulesList.at(i).split ( "=", QString::SkipEmptyParts );
-        rulesMap.insert( pair.at(0), pair.at(1) );
-    }
+
+    // Set title : Map, physic, time
+
+    /* ui->demoInfosBox->setTitle( m_demoModel->data( m_demoModel->index( row, 2 ), Qt::DisplayRole ).toString()
+                                + " (" + m_demoModel->data( m_demoModel->index( row, 4 ), Qt::DisplayRole ).toString() + ") "
+                                + m_demoModel->data( m_demoModel->index( row, 5 ), Qt::DisplayRole ).toString() ); */
 
     // Display rules
 
     QString varRefName = "";
     QString varRefValue = "";
     QString varDemoValue = "";
+
+    QMap<QString, QString> rulesMap;
+    QStringList pair;
+
+    for( i = 0 ; i < rulesList.size() ; i++ )
+    {
+        pair = rulesList.at(i).split ( "=", QString::SkipEmptyParts );
+        rulesMap.insert( pair.at(0), pair.at(1) );
+    }
 
     for( i = 0 ; i < m_varModel->rowCount() ; i++ )
     {
@@ -420,20 +427,32 @@ void MainWindow::displayDemosInfos( int row )
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+void MainWindow::emptyDemoInfos()
+{
+    ui->frameDemo->setHtml("<div width=\"100%\" height=\"100%\" align=\"center\"><br><br><br><i><font color=\"grey\">No demo selected</font></i></div>");
+    for( int i = 0 ; i < m_varModel->rowCount() ; i++ )
+    {
+        m_varModel->item( i, 1)->setText("");
+        m_varModel->item( i, 1)->setIcon( QIcon() );
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 void MainWindow::onDemoHighlighted( const QModelIndex & index )
 {
     if( !ui->demoInfosBox->isVisible() )
         return;
 
-    const QModelIndex & PlayerInfoIndex = m_demoModel->index(index.row(), 9);
+    const QModelIndex & PlayerInfoIndex = m_demoModel->index( index.row(), 9 );
 
+    // If demo not parsed, send it to threadParser, else display demo infos.
     if( m_demoModel->data( PlayerInfoIndex, Qt::DisplayRole ).toString() == "" )
     {
         QPair<int, QString> pair;
         pair.first = m_demoModel->data( m_demoModel->index(index.row(), 0), Qt::DisplayRole ).toInt();
-        pair.second = m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(index.row(), 1), Qt::DisplayRole ).toString();
-        m_thread->addOneDemo(pair);
-
+        pair.second = m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index( index.row(), 1 ), Qt::DisplayRole ).toString();
+        m_thread->addOneDemo( pair );
     }else{
         displayDemosInfos( index.row() );
     }
@@ -441,15 +460,23 @@ void MainWindow::onDemoHighlighted( const QModelIndex & index )
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+QModelIndex MainWindow::currentDemo()
+{
+    if( ui->listView->selectionModel()->selectedIndexes().size() > 0 )
+        return ui->listView->selectionModel()->selectedIndexes().at(0);
+
+    return QModelIndex();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 void MainWindow::playDemo()
 {
-    QModelIndexList indexList = ui->listView->selectionModel()->selectedIndexes();
-
     if( !QFile::exists(m_engineFile) )
     {
         QMessageBox msgBox;
-        msgBox.setText(QString("File %1 not found").arg(m_engineFile));
-        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.setText( QString("Quake 3 engine not found") );
+        msgBox.setIcon( QMessageBox::Critical );
         msgBox.exec();
         return;
     }
@@ -464,7 +491,7 @@ void MainWindow::playDemo()
                       " +set fs_game defrag" +
                       " +demo " +
                       demoFolder +
-                      indexList.at(0).data().toString();
+                      currentDemo().data().toString();
 
     statusBar()->showMessage( QString(tr("Executing '%1'")).arg(command) );
     QProcess::execute(command);
@@ -489,7 +516,6 @@ void MainWindow::parseAllDemo()
 
     if( !demosList.isEmpty() )
     {
-        m_progressBar->setVisible( true );
         m_textProgressBar->setVisible( true );
         m_thread->addDemos( &demosList );
     }
@@ -557,6 +583,7 @@ void MainWindow::parseAndSaveGameState( QString gameState,
             if( !resource.isValid() )
                 resource.setFileName( QString(":/image/%1/default").arg( headModel.at(0) ) );
         }
+
         if( playerName != "" && headModel.size() > 0 )
         {
             nbplayer++;
@@ -577,8 +604,6 @@ void MainWindow::parseAndSaveGameState( QString gameState,
         playerInfos.replace("$size","28");
     else
         playerInfos.replace("$size","48");
-
-
 
     m_demoModel->setData( rulesIndex, demoRules, Qt::EditRole );
     m_demoModel->setData( playerInfoIndex, playerInfos, Qt::EditRole );

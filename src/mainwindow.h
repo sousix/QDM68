@@ -34,6 +34,8 @@ protected:
     void displayDemosInfos( int );
     void initSettings();
     void saveSettings();
+    QModelIndex currentDemo();
+    void emptyDemoInfos();
 
 protected slots:
     void invertSelection();
@@ -59,7 +61,6 @@ private:
     SettingsDialog * m_SettingsDialog;
     QStandardItemModel * m_varModel;
     bool m_selectInProgress;
-    QProgressBar * m_progressBar;
     QLabel * m_textProgressBar;
 
     ThreadParser * m_thread;
