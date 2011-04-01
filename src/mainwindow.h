@@ -46,7 +46,7 @@ protected slots:
     void openSettingsDialog();
     void playDemo();
     void parseAllDemo();
-    void onDemoHighlighted( const QModelIndex & );
+    void processDemo( const QModelIndex & );
     void onMoreInfosClicked();
     void onDemoParsed( int, QString, int, int );
     void onThreadParserFinished();

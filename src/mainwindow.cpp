@@ -35,7 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect( ui->actionParseAll, SIGNAL(triggered()), this, SLOT(parseAllDemo()) );
     connect( ui->btnPlayDemo, SIGNAL(released()), this, SLOT(playDemo()) );
     connect( ui->btnMoreInfos, SIGNAL(released()), this, SLOT(onMoreInfosClicked()) );
-    connect( ui->listView, SIGNAL(selectionChanged(const QModelIndex &)), this, SLOT(onDemoHighlighted(const QModelIndex &)) );
+    connect( ui->listView, SIGNAL(selectionChanged(const QModelIndex &)), this, SLOT(processDemo(const QModelIndex &)) );
     connect( m_thread, SIGNAL(demoParsed(int, QString, int, int)), this, SLOT(onDemoParsed(int, QString, int, int)) );
     connect( m_thread, SIGNAL(finished()), this, SLOT(onThreadParserFinished()) );
     connect( m_demoModel, SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)),
@@ -364,7 +364,7 @@ void MainWindow::onMoreInfosClicked()
     this->adjustSize();
 
     if( currentDemo().isValid() )
-        onDemoHighlighted( currentDemo() );
+        processDemo( currentDemo() );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -440,7 +440,7 @@ void MainWindow::emptyDemoInfos()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MainWindow::onDemoHighlighted( const QModelIndex & index )
+void MainWindow::processDemo( const QModelIndex & index )
 {
     if( !ui->demoInfosBox->isVisible() )
         return;
@@ -453,7 +453,7 @@ void MainWindow::onDemoHighlighted( const QModelIndex & index )
         QPair<int, QString> pair;
         pair.first = m_demoModel->data( m_demoModel->index(index.row(), 0), Qt::DisplayRole ).toInt();
         pair.second = m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index( index.row(), 1 ), Qt::DisplayRole ).toString();
-        m_thread->addOneDemo( pair );
+        m_thread->addPriorityDemo( pair );
     }else{
         displayDemosInfos( index.row() );
     }

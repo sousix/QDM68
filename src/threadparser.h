@@ -5,6 +5,7 @@
 #include <QList>
 #include <QString>
 #include <QPair>
+#include <QMutex>
 
 class ThreadParser : public QThread
 {
@@ -13,7 +14,7 @@ class ThreadParser : public QThread
 public:
     explicit ThreadParser(QObject *parent = 0);
     void addDemos( QList< QPair<int, QString> > * );
-    void addOneDemo( QPair<int, QString> demo );
+    void addPriorityDemo( QPair<int, QString> demo );
     void run();
 
 signals:
@@ -21,6 +22,8 @@ signals:
 
 private:
     QList< QPair<int, QString> > m_demosList;
+    QPair<int, QString> m_priorityDemo;
+    QMutex m_mutex;
     int m_size;
 };
 
