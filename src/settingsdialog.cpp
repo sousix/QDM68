@@ -12,6 +12,9 @@ SettingsDialog::SettingsDialog(QWidget * parent) :
     m_model = new QStandardItemModel(this);
     ui->tblRules->setModel(m_model);
 
+    this->move( parent->x() + (parent->size().rwidth() - this->size().rwidth())/2 ,
+                parent->y() + (parent->size().rheight() - this->size().rheight())/2 );
+
     connect(ui->btnEngine, SIGNAL(released()), this, SLOT(openEngineDialog()));
     connect(m_model, SIGNAL(itemChanged(QStandardItem *)), this, SLOT(onItemChange()));
 }
