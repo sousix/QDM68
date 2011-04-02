@@ -54,9 +54,8 @@ protected slots:
 private:
     Ui::MainWindow * ui;
 
+    QdmSettings m_settings;
     QDir m_demosDir;
-    QString m_engineFile;
-    QMap<QString, QString> m_rules;
     SqlTableModelCheckable * m_demoModel;
     SettingsDialog * m_SettingsDialog;
     QStandardItemModel * m_varModel;

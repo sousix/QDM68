@@ -7,7 +7,8 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    m_settings()
 {
     ui->setupUi( this );
     m_SettingsDialog = NULL;
@@ -96,12 +97,12 @@ void MainWindow::buildRulesList()
     QMap<QString, QString>::iterator it;
 
     m_varModel->clear();
-    m_varModel->setRowCount( m_rules.size() );
+    m_varModel->setRowCount( m_settings.rules.size() );
     m_varModel->setColumnCount(2);
 
-    it = m_rules.begin();
+    it = m_settings.rules.begin();
     i = 0;
-    while( it != m_rules.end() )
+    while( it != m_settings.rules.end() )
     {
         // Insert key
         QStandardItem *item = new QStandardItem( it.key() );
@@ -205,38 +206,6 @@ void MainWindow::openDemosDialog()
             m_demosDir = newDir;
             createDemosList();
             saveSettings();
-        }
-    }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-void MainWindow::openSettingsDialog()
-{
-    if( !m_SettingsDialog )
-    {
-        m_SettingsDialog = new SettingsDialog(this);
-        m_SettingsDialog->setRules(&m_rules);
-        m_SettingsDialog->setEngineFilename(m_engineFile);
-    }
-
-    if( m_SettingsDialog->exec() == 1 )
-    {
-        if( m_SettingsDialog->hasChanged() )
-        {
-            m_rules = m_SettingsDialog->getRules();
-            m_engineFile = m_SettingsDialog->getEngineFilename();
-            saveSettings();
-
-            // Refresh variable list for current demo
-            if( currentDemo().isValid() )
-                displayDemosInfos( currentDemo().row() );
-        }
-    }else{
-        if( m_SettingsDialog->hasChanged() )
-        {
-            m_SettingsDialog->setRules(&m_rules);
-            m_SettingsDialog->setEngineFilename(m_engineFile);
         }
     }
 }
@@ -400,7 +369,7 @@ void MainWindow::displayDemosInfos( int row )
     for( i = 0 ; i < m_varModel->rowCount() ; i++ )
     {
         varRefName = m_varModel->item( i , 0 )->data( Qt::DisplayRole ).toString();
-        varRefValue = m_rules.value( m_varModel->item( i , 0 )->data( Qt::DisplayRole ).toString() );
+        varRefValue = m_settings.rules.value( m_varModel->item( i , 0 )->data( Qt::DisplayRole ).toString() );
         varDemoValue = rulesMap.value( m_varModel->item( i , 0 )->data( Qt::DisplayRole ).toString() );
 
         if( rulesMap.contains( varRefName ) )
@@ -473,7 +442,7 @@ QModelIndex MainWindow::currentDemo()
 
 void MainWindow::playDemo()
 {
-    if( !QFile::exists(m_engineFile) )
+    if( !QFile::exists(m_settings.engineFile) )
     {
         QMessageBox msgBox;
         msgBox.setText( QString("Quake 3 engine not found") );
@@ -488,7 +457,7 @@ void MainWindow::playDemo()
     if( demoFolder != "" )
         demoFolder += "/";
 
-    QString command = m_engineFile +
+    QString command = m_settings.engineFile +
                       " +set fs_game defrag" +
                       " +demo " +
                       demoFolder +
@@ -564,7 +533,7 @@ void MainWindow::parseAndSaveGameState( QString gameState,
     {
         property = propertyStringList.at(row).split( "=", QString::KeepEmptyParts );
 
-        if( m_rules.contains( property.at(0) ) )
+        if( m_settings.rules.contains( property.at(0) ) )
             demoRules += propertyStringList.at(row) + "\\";
         else if( property.at(0) == "n" )
             playerName = property.at(1);
@@ -612,38 +581,66 @@ void MainWindow::parseAndSaveGameState( QString gameState,
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+void MainWindow::openSettingsDialog()
+{
+    if( !m_SettingsDialog )
+    {
+        m_SettingsDialog = new SettingsDialog(this);
+        m_SettingsDialog->setSettings( m_settings );
+    }
+
+    if( m_SettingsDialog->exec() == 1 )
+    {
+        QdmSettings newSettings = m_SettingsDialog->getSettings();
+
+        if( m_settings.isEqual( newSettings ) )
+        {
+            m_settings.copy( newSettings );
+            saveSettings();
+            // Refresh variable list for current demo
+            if( currentDemo().isValid() )
+                displayDemosInfos( currentDemo().row() );
+        }
+    }else{
+        m_SettingsDialog->setSettings( m_settings );
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 void MainWindow::initSettings()
 {
     if( !QFile::exists(CFG_FILE) )
     {
-        m_rules.insert("timescale", "1");
-        m_rules.insert("g_synchronousClients", "1");
-        m_rules.insert("pmove_fixed", "0");
-        m_rules.insert("pmove_msec", "8");
-        m_rules.insert("sv_fps", "125");
-        m_rules.insert("com_maxfps", "125");
-        m_rules.insert("g_speed", "320");
-        m_rules.insert("g_gravity", "800");
-        m_rules.insert("g_knockback", "1000");
-        m_rules.insert("sv_cheats", "0");
-        m_engineFile = "";
+        m_settings.rules.insert("timescale", "1");
+        m_settings.rules.insert("g_synchronousClients", "1");
+        m_settings.rules.insert("pmove_fixed", "0");
+        m_settings.rules.insert("pmove_msec", "8");
+        m_settings.rules.insert("sv_fps", "125");
+        m_settings.rules.insert("com_maxfps", "125");
+        m_settings.rules.insert("g_speed", "320");
+        m_settings.rules.insert("g_gravity", "800");
+        m_settings.rules.insert("g_knockback", "1000");
+        m_settings.rules.insert("sv_cheats", "0");
+        m_settings.engineFile = "";
         m_demosDir = QDir::home();
         saveSettings();
 
     }else{
 
-        QSettings settings(CFG_FILE, QSettings::IniFormat, this);
+        QSettings iniSettings(CFG_FILE, QSettings::IniFormat, this);
         QStringList keys;
 
-        settings.beginGroup("paths");
-        m_demosDir.setPath( settings.value("demos_dir", QDir::home().absolutePath()).toString());
-        m_engineFile = settings.value("engine","").toString();
-        settings.endGroup();
-        settings.beginGroup("rules");
-        keys = settings.childKeys();
+        iniSettings.beginGroup("paths");
+        m_demosDir.setPath( iniSettings.value("demos_dir", QDir::home().absolutePath()).toString());
+        m_settings.engineFile = iniSettings.value("engine","").toString();
+        iniSettings.endGroup();
+
+        iniSettings.beginGroup("rules");
+        keys = iniSettings.childKeys();
         for (int i = 0; i < keys.size(); ++i)
-            m_rules.insert( keys.at(i), settings.value(keys.at(i),"").toString() );
-        settings.endGroup();
+            m_settings.rules.insert( keys.at(i), iniSettings.value(keys.at(i),"").toString() );
+        iniSettings.endGroup();
     }
 }
 
@@ -652,9 +649,9 @@ void MainWindow::initSettings()
 void MainWindow::saveSettings()
 {
     QMap<QString, QString>::iterator it;
-    QSettings settings(CFG_FILE, QSettings::IniFormat, this);
+    QSettings iniSettings(CFG_FILE, QSettings::IniFormat, this);
 
-    if( !settings.isWritable() )
+    if( !iniSettings.isWritable() )
     {
         QMessageBox msgBox;
         msgBox.setText(tr("Settings cannot be saved."));
@@ -663,18 +660,18 @@ void MainWindow::saveSettings()
         return;
     }
 
-    settings.beginGroup("paths");
-    settings.setValue("demos_dir", m_demosDir.absolutePath());
-    settings.setValue("engine", m_engineFile);
-    settings.endGroup();
-    settings.beginGroup("rules");
-    it = m_rules.begin();
-    while( it != m_rules.end() )
+    iniSettings.beginGroup("paths");
+    iniSettings.setValue("demos_dir", m_demosDir.absolutePath());
+    iniSettings.setValue("engine", m_settings.engineFile);
+    iniSettings.endGroup();
+    iniSettings.beginGroup("rules");
+    it = m_settings.rules.begin();
+    while( it != m_settings.rules.end() )
     {
-        settings.setValue(it.key(),it.value());
+        iniSettings.setValue(it.key(),it.value());
         it++;
     }
-    settings.endGroup();
+    iniSettings.endGroup();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
