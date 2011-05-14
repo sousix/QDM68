@@ -50,6 +50,9 @@ protected slots:
     void onMoreInfosClicked();
     void onDemoParsed( int, QString, int, int );
     void onThreadParserFinished();
+    void copyDemosTo();
+    void moveDemosTo();
+    void deleteDemos();
 
 private:
     Ui::MainWindow * ui;

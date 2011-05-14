@@ -17,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     createDatabase();
 
-    m_demoModel = new SqlTableModelCheckable( this );
+    m_demoModel = new SqlTableModelCheckable( 0, this );
     m_demoModel->setTable( "demos" );
     m_demoModel->setEditStrategy( QSqlTableModel::OnManualSubmit );
 
@@ -30,6 +30,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect( ui->btnInvertSelection, SIGNAL(released()), this, SLOT(invertSelection()) );
     connect( ui->btnSelectWorst, SIGNAL(released()), this, SLOT(selectWorst()) );
     connect( ui->btnUnselectAll, SIGNAL(released()), this, SLOT(unselectAll()) );
+    connect( ui->btnMoveTo, SIGNAL(released()), this, SLOT(moveDemosTo()) );
+    connect( ui->btnCopyTo, SIGNAL(released()), this, SLOT(copyDemosTo()) );
+    connect( ui->btnDelete, SIGNAL(released()), this, SLOT(deleteDemos()) );
     connect( ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()) );
     connect( ui->actionDemos_folder, SIGNAL(triggered()), this, SLOT(openDemosDialog()) );
     connect( ui->actionSettings, SIGNAL(triggered()), this, SLOT(openSettingsDialog()) );
@@ -163,6 +166,103 @@ void MainWindow::unselectAll()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+void MainWindow::copyDemosTo()
+{
+    QFileDialog::Options options = QFileDialog::DontResolveSymlinks | QFileDialog::ShowDirsOnly;
+    QString dirName = QFileDialog::getExistingDirectory( this, tr("Select folder"), m_demosDir.absolutePath(), options );
+    QDir copyDir( dirName );
+
+    if ( dirName.isEmpty() )
+        return;
+
+    QProgressDialog progress(tr("Copying files..."), tr("Abort Copy"), 0, m_demoModel->countBoxChecked(), this);
+    progress.setWindowModality(Qt::WindowModal);
+    int i, j=0;
+
+    for ( i = 0 ; i < m_demoModel->rowCount() ; i++)
+    {
+        QCoreApplication::processEvents();
+
+        if (progress.wasCanceled())
+            break;
+
+        if( m_demoModel->data( m_demoModel->index(i, 1), Qt::CheckStateRole ) == Qt::Checked )
+        {
+            progress.setValue(j++);
+            QFile::copy( m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(i, 1) ).toString(),
+                         copyDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(i, 1) ).toString() );
+        }
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+void MainWindow::moveDemosTo()
+{
+    QFileDialog::Options options = QFileDialog::DontResolveSymlinks | QFileDialog::ShowDirsOnly;
+    QString dirName = QFileDialog::getExistingDirectory( this, tr("Select folder"), m_demosDir.absolutePath(), options );
+    QDir moveDir( dirName );
+
+    if ( dirName.isEmpty() )
+        return;
+
+    bool allFileMoved = true;
+    bool isMoved;
+    int i = 0;
+    while( i < m_demoModel->rowCount() )
+    {
+        if( m_demoModel->data( m_demoModel->index(i, 1), Qt::CheckStateRole ) == Qt::Checked )
+        {
+             isMoved = QFile::rename( m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(i, 1) ).toString(),
+                                      moveDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(i, 1) ).toString() );
+             if( isMoved )
+                m_demoModel->removeRows( i, 1, m_demoModel->index(i, 1).parent() );
+
+             allFileMoved &= isMoved;
+        }
+        i++;
+    }
+    m_demoModel->submitAll();
+
+    if( !allFileMoved )
+        QMessageBox::warning( this, tr("Warning"), tr("One or more files could not be moved.") );
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+void MainWindow::deleteDemos()
+{
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, tr("Deletion"),
+                                  QString(tr("Are you sure you want to delete %1 files ?")).arg(m_demoModel->countBoxChecked()),
+                                  QMessageBox::Yes | QMessageBox::Cancel);
+
+    if ( reply == QMessageBox::Cancel )
+        return;
+
+    bool isRemoved;
+    bool allFileRemoved = true;
+    int i = 0;
+    while( i < m_demoModel->rowCount() )
+    {
+        if( m_demoModel->data( m_demoModel->index(i, 1), Qt::CheckStateRole ) == Qt::Checked )
+        {
+            isRemoved = QFile::remove( m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(i, 1) ).toString() );
+            if( isRemoved )
+                m_demoModel->removeRows( i, 1, m_demoModel->index(i, 1).parent() );
+
+            allFileRemoved &= isRemoved;
+        }
+        i++;
+    }
+    m_demoModel->submitAll();
+
+    if( !allFileRemoved )
+        QMessageBox::warning( this, tr("Warning"), tr("One or more files could not be deleted.") );
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 void MainWindow::onBoxChecked( const QModelIndex & topLeft, const QModelIndex & bottomRight )
 {
     Q_UNUSED(topLeft);
@@ -260,7 +360,7 @@ void MainWindow::createDemosList()
     QRegExp pattern( "([^\\[.]*)\\[([^\\..]*)\\.([^\\].]*)\\]([0-9]{2}\\.[0-9]{2}\\.[0-9]{3})\\(([^\\..]*)\\.([^\\).]*)\\)\\.dm_.*" );
     int i, nbDemos = 0;
 
-    if( !m_demoModel->removeRows(0, m_demoModel->rowCount()) )
+    if( m_demoModel->rowCount() != 0 && !m_demoModel->removeRows( 0, m_demoModel->rowCount() ) )
         qDebug() << "Cannot remove rows";
     else
         m_demoModel->submitAll(); // Apply changement in DB
@@ -329,7 +429,7 @@ void MainWindow::onThreadParserFinished()
 
 void MainWindow::onMoreInfosClicked()
 {
-    ui->demoInfosBox->setVisible( !ui->demoInfosBox->isVisible() );
+    ui->demoInfosBox->setVisible( !ui->demoInfosBox->isVisible()     );
     this->adjustSize();
 
     if( currentDemo().isValid() )
@@ -338,10 +438,10 @@ void MainWindow::onMoreInfosClicked()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MainWindow::displayDemosInfos( int row )
+void    MainWindow::displayDemosInfos( int row )
 {  
     int i;
-    const QStringList & rulesList = m_demoModel->data( m_demoModel->index( row, 8 ), Qt::DisplayRole ).toString().split ( "\\", QString::SkipEmptyParts );
+    const QStringList & rulesList = m_demoModel->data( m_demoModel->index( row, 8 ) ).toString().split ( "\\", QString::SkipEmptyParts );
     QMap<QString, QString>::iterator it;
 
 
@@ -392,7 +492,7 @@ void MainWindow::displayDemosInfos( int row )
 
     // Display player(s) infos
 
-    ui->frameDemo->setHtml( m_demoModel->data( m_demoModel->index( row, 9 ), Qt::DisplayRole).toString() );
+    ui->frameDemo->setHtml( m_demoModel->data( m_demoModel->index( row, 9 ) ).toString() );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -417,11 +517,11 @@ void MainWindow::processDemo( const QModelIndex & index )
     const QModelIndex & PlayerInfoIndex = m_demoModel->index( index.row(), 9 );
 
     // If demo not parsed, send it to threadParser, else display demo infos.
-    if( m_demoModel->data( PlayerInfoIndex, Qt::DisplayRole ).toString() == "" )
+    if( m_demoModel->data( PlayerInfoIndex ).toString() == "" )
     {
         QPair<int, QString> pair;
-        pair.first = m_demoModel->data( m_demoModel->index(index.row(), 0), Qt::DisplayRole ).toInt();
-        pair.second = m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index( index.row(), 1 ), Qt::DisplayRole ).toString();
+        pair.first = m_demoModel->data( m_demoModel->index(index.row(), 0) ).toInt();
+        pair.second = m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index( index.row(), 1 ) ).toString();
         m_thread->addPriorityDemo( pair );
     }else{
         displayDemosInfos( index.row() );
@@ -476,10 +576,10 @@ void MainWindow::parseAllDemo()
     QPair<int, QString> pair;
     for( int i=0 ; i<m_demoModel->rowCount() ; i++ )
     {
-        if( m_demoModel->data( m_demoModel->index(i, 8), Qt::DisplayRole ).toString() == "" )
+        if( m_demoModel->data( m_demoModel->index(i, 8) ).toString() == "" )
         {
-            pair.first = m_demoModel->data( m_demoModel->index(i, 0), Qt::DisplayRole ).toInt();
-            pair.second = m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(i, 1), Qt::DisplayRole ).toString();
+            pair.first = m_demoModel->data( m_demoModel->index(i, 0) ).toInt();
+            pair.second = m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(i, 1) ).toString();
             demosList.append( pair );
         }
     }

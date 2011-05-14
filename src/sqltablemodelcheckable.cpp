@@ -1,9 +1,10 @@
 #include "sqltablemodelcheckable.h"
 
-SqlTableModelCheckable::SqlTableModelCheckable(QObject * parent, QSqlDatabase db)
-                        : QSqlTableModel(parent, db), checklist(), fontBold(), fontNormal()
+SqlTableModelCheckable::SqlTableModelCheckable( int primaryKeyColumn, QObject * parent, QSqlDatabase db )
+                        : QSqlTableModel(parent, db), m_idList(), m_fontBold(), m_fontNormal()
 {
-    fontBold.setBold(true);
+    m_fontBold.setBold(true);
+    m_primaryKeyColumn = primaryKeyColumn;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -15,11 +16,18 @@ Qt::ItemFlags SqlTableModelCheckable::flags(const QModelIndex &index) const
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+int SqlTableModelCheckable::primaryKey( const int row ) const
+{
+    return index( row, m_primaryKeyColumn ).data().toInt();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 QVariant SqlTableModelCheckable::data(const QModelIndex& index, int role) const
 {
     if( role == Qt::CheckStateRole && index.column() == 1 )
     {
-        if( checklist.contains(index) )
+        if( m_idList.contains( primaryKey( index.row() ) ) )
             return Qt::Checked;
         else
             return Qt::Unchecked;
@@ -27,10 +35,10 @@ QVariant SqlTableModelCheckable::data(const QModelIndex& index, int role) const
 
     if( role == Qt::FontRole && index.column() == 1 )
     {
-        if( checklist.contains(index) )
-            return fontBold;
+        if( m_idList.contains( primaryKey( index.row() ) ) )
+            return m_fontBold;
         else
-            return fontNormal;
+            return m_fontNormal;
     }
 
     return QSqlTableModel::data(index, role);
@@ -43,9 +51,9 @@ bool SqlTableModelCheckable::setData(const QModelIndex& index, const QVariant& v
     if( role == Qt::CheckStateRole && index.column() == 1 )
     {
         if ( value == Qt::Checked )
-            checklist.insert( index );
+            m_idList.insert( primaryKey( index.row() ) );
         else
-            checklist.remove( index );
+            m_idList.remove( primaryKey( index.row() ) );
 
         emit dataChanged( index, index );
         return true;
@@ -56,55 +64,45 @@ bool SqlTableModelCheckable::setData(const QModelIndex& index, const QVariant& v
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool SqlTableModelCheckable::removeRows ( int position, int rows, const QModelIndex & parent )
+bool SqlTableModelCheckable::removeRows ( int row, int count, const QModelIndex & parent )
 {
-    QSet<QPersistentModelIndex>::iterator it;
     int i;
 
-    if( checklist.count() > 0 )
+    beginRemoveRows( parent, row, row+count-1 );
+    if( m_idList.count() > 0 )
     {
-        // Delete checked box for deleted rows
-        beginRemoveRows( QModelIndex(), position, position+rows-1 );
-        for ( i = 0; i < rows && checklist.count() > 0; ++i )
+        for ( i = row; i < row+count && m_idList.count() > 0; ++i )
         {
-            it = checklist.begin();
-            while ( it != checklist.end() )
+            if( m_idList.contains( primaryKey( i ) ) )
             {
-                if( (*it).row() == i )
-                {
-                    checklist.erase( it );
-                    emit dataChanged( *it, *it );
-                    break;
-                }
-                ++it;
+                m_idList.erase( m_idList.find( primaryKey( i ) ) );
+                //emit dataChanged( this->index(i, 1, parent), this->index(i, 1, parent) );
             }
         }
-        endRemoveRows();
     }
+    endRemoveRows();
 
-    QSqlTableModel::removeRows( position, rows, parent );
-
-    return true;
+    return QSqlTableModel::removeRows( row, count, parent );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool SqlTableModelCheckable::hasBoxChecked()
 {
-    return ( checklist.count() > 0 );
+    return ( m_idList.count() > 0 );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 int SqlTableModelCheckable::countBoxChecked()
 {
-    return checklist.count();
+    return m_idList.count();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 void SqlTableModelCheckable::clearBox()
 {
-    checklist.clear();
+    m_idList.clear();
     emit dataChanged( QModelIndex(), QModelIndex() );
 }
