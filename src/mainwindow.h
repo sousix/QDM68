@@ -6,10 +6,12 @@
 #include <QtSql>
 #include "sqltablemodelcheckable.h"
 #include "settingsdialog.h"
+#include "statisticsdialog.h"
 #include "threadparser.h"
 #include "listviewcustom.h"
 
 #define CFG_FILE "qdm68.cfg"
+#define SOFTWARE_VERSION "1.0"
 
 namespace Ui {
     class MainWindow;
@@ -44,11 +46,13 @@ protected slots:
     void onBoxChecked( const QModelIndex &, const QModelIndex & );
     void openDemosDialog();
     void openSettingsDialog();
+    void openStatisticsDialog();
     void playDemo();
     void parseAllDemo();
     void processDemo( const QModelIndex & );
-    void onMoreInfosClicked();
+    void onDetailsClicked();
     void onDemoParsed( int, QString, int, int );
+    void onAboutClicked();
     void onThreadParserFinished();
     void copyDemosTo();
     void moveDemosTo();
@@ -60,7 +64,8 @@ private:
     QdmSettings m_settings;
     QDir m_demosDir;
     SqlTableModelCheckable * m_demoModel;
-    SettingsDialog * m_SettingsDialog;
+    SettingsDialog * m_settingsDialog;
+    StatisticsDialog * m_statisticsDialog;
     QStandardItemModel * m_varModel;
     bool m_selectInProgress;
     QLabel * m_textProgressBar;

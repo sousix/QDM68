@@ -78,9 +78,9 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="btnMoreInfos">
+         <widget class="QPushButton" name="btnDetails">
           <property name="text">
-           <string>More infos</string>
+           <string>Details</string>
           </property>
          </widget>
         </item>
@@ -266,6 +266,9 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:11pt;&quot;&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:8pt;&quot;&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
@@ -377,7 +380,7 @@ p, li { white-space: pre-wrap; }
      <string>Options</string>
     </property>
     <addaction name="actionSettings"/>
-    <addaction name="actionStatistiques"/>
+    <addaction name="actionStatistics"/>
     <addaction name="separator"/>
     <addaction name="actionParseAll"/>
    </widget>
@@ -385,8 +388,7 @@ p, li { white-space: pre-wrap; }
     <property name="title">
      <string>About</string>
     </property>
-    <addaction name="actionAbout_QDM68"/>
-    <addaction name="actionAbout_Qt"/>
+    <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuAbout"/>
@@ -415,7 +417,7 @@ p, li { white-space: pre-wrap; }
     <bool>true</bool>
    </property>
   </action>
-  <action name="actionStatistiques">
+  <action name="actionStatistics">
    <property name="icon">
     <iconset resource="ressources.qrc">
      <normaloff>:/image/images/diagram_16.png</normaloff>:/image/images/diagram_16.png</iconset>
@@ -439,7 +441,7 @@ p, li { white-space: pre-wrap; }
     <bool>true</bool>
    </property>
   </action>
-  <action name="actionAbout_QDM68">
+  <action name="actionAbout">
    <property name="text">
     <string>About QDM68</string>
    </property>

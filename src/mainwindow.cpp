@@ -11,7 +11,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_settings()
 {
     ui->setupUi( this );
-    m_SettingsDialog = NULL;
+    m_settingsDialog = NULL;
+    m_statisticsDialog = NULL;
     m_selectInProgress = false;
     m_thread = new ThreadParser();
 
@@ -37,8 +38,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect( ui->actionDemos_folder, SIGNAL(triggered()), this, SLOT(openDemosDialog()) );
     connect( ui->actionSettings, SIGNAL(triggered()), this, SLOT(openSettingsDialog()) );
     connect( ui->actionParseAll, SIGNAL(triggered()), this, SLOT(parseAllDemo()) );
+    connect( ui->actionStatistics, SIGNAL(triggered()), this, SLOT(openStatisticsDialog()) );
+    connect( ui->actionAbout, SIGNAL(triggered()), this, SLOT(onAboutClicked()) );
     connect( ui->btnPlayDemo, SIGNAL(released()), this, SLOT(playDemo()) );
-    connect( ui->btnMoreInfos, SIGNAL(released()), this, SLOT(onMoreInfosClicked()) );
+    connect( ui->btnDetails, SIGNAL(released()), this, SLOT(onDetailsClicked()) );
     connect( ui->listView, SIGNAL(selectionChanged(const QModelIndex &)), this, SLOT(processDemo(const QModelIndex &)) );
     connect( m_thread, SIGNAL(demoParsed(int, QString, int, int)), this, SLOT(onDemoParsed(int, QString, int, int)) );
     connect( m_thread, SIGNAL(finished()), this, SLOT(onThreadParserFinished()) );
@@ -154,6 +157,7 @@ void MainWindow::selectWorst()
     QSqlQuery query( "SELECT d.id, d.map, d.physic "
                      "FROM demos as d "
                      "WHERE d.id NOT IN (SELECT id FROM demos AS e WHERE e.map = d.map AND e.physic = d.physic AND e.multi = d.multi ORDER BY time ASC LIMIT 0,1)" );
+
     buildSelection(&query);
 }
 
@@ -427,13 +431,25 @@ void MainWindow::onThreadParserFinished()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MainWindow::onMoreInfosClicked()
+void MainWindow::onDetailsClicked()
 {
     ui->demoInfosBox->setVisible( !ui->demoInfosBox->isVisible()     );
     this->adjustSize();
 
     if( currentDemo().isValid() )
         processDemo( currentDemo() );
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+void MainWindow::onAboutClicked()
+{
+    QString about =  "<center><h3><b>QDM68 v" SOFTWARE_VERSION "</b><h3></center>"
+                     "Author : <i>Stephane `sOuSiX` C.</i><br><br>"
+                     "Created with <a href=\"http://qt.nokia.com\">Qt SDK</a><br>"
+                     "Check out sources @ <a href=\"https://github.com/sOuSiX/QDM68\">Github/QDM68</a>";
+
+    QMessageBox::about( this, "About QDM68", about );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -681,17 +697,77 @@ void MainWindow::parseAndSaveGameState( QString gameState,
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MainWindow::openSettingsDialog()
+void MainWindow::openStatisticsDialog()
 {
-    if( !m_SettingsDialog )
+    if( !m_statisticsDialog )
+        m_statisticsDialog = new StatisticsDialog(this);
+
+    int soloVq3, soloCpm;
+    int multiVq3, multiCpm;
+    int nbMillisecVq3 = 0, nbMillisecCpm = 0;
+
+    QStringList list;
+    QSqlQuery query;
+
+    query.exec( "SELECT count(id) "
+                "FROM demos "
+                "WHERE upper(physic) = 'VQ3' AND upper(multi) = 'MDF' ");
+    if( query.next() )
+        multiVq3 = query.value(0).toInt();
+
+    query.exec( "SELECT count(id) "
+                "FROM demos "
+                "WHERE upper(physic) = 'VQ3' AND upper(multi) = 'DF' ");
+    if( query.next() )
+        soloVq3 = query.value(0).toInt();
+
+    query.exec( "SELECT count(id) "
+                "FROM demos "
+                "WHERE upper(physic) = 'CPM' AND upper(multi) = 'DF' ");
+    if( query.next() )
+        soloCpm = query.value(0).toInt();
+
+    query.exec( "SELECT count(id) "
+                "FROM demos "
+                "WHERE upper(physic) = 'CPM' AND upper(multi) = 'MDF' ");
+    if( query.next() )
+        multiCpm = query.value(0).toInt();
+
+    query.exec( "SELECT time "
+                "FROM demos "
+                "WHERE upper(physic) = 'VQ3' ");
+    while( query.next() )
     {
-        m_SettingsDialog = new SettingsDialog(this);
-        m_SettingsDialog->setSettings( m_settings );
+        list = query.value(0).toString().split('.');
+        nbMillisecVq3 += list.at(0).toInt() * 60000 + list.at(1).toInt() * 1000 + list.at(2).toInt();
     }
 
-    if( m_SettingsDialog->exec() == 1 )
+    query.exec( "SELECT time "
+                "FROM demos "
+                "WHERE upper(physic) = 'CPM' ");
+    while( query.next() )
     {
-        QdmSettings newSettings = m_SettingsDialog->getSettings();
+        list = query.value(0).toString().split('.');
+        nbMillisecCpm += list.at(0).toInt() * 60000 + list.at(1).toInt() * 1000 + list.at(2).toInt();
+    }
+
+    m_statisticsDialog->updateStatistics( soloVq3, soloCpm, multiVq3, multiCpm, nbMillisecVq3, nbMillisecCpm );
+    m_statisticsDialog->exec();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+void MainWindow::openSettingsDialog()
+{
+    if( !m_settingsDialog )
+    {
+        m_settingsDialog = new SettingsDialog(this);
+        m_settingsDialog->setSettings( m_settings );
+    }
+
+    if( m_settingsDialog->exec() == 1 )
+    {
+        QdmSettings newSettings = m_settingsDialog->getSettings();
 
         if( m_settings.isEqual( newSettings ) )
         {
@@ -702,7 +778,7 @@ void MainWindow::openSettingsDialog()
                 displayDemosInfos( currentDemo().row() );
         }
     }else{
-        m_SettingsDialog->setSettings( m_settings );
+        m_settingsDialog->setSettings( m_settings );
     }
 }
 
