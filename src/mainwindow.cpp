@@ -445,7 +445,7 @@ void MainWindow::onDetailsClicked()
 void MainWindow::onAboutClicked()
 {
     QString about =  "<center><h3><b>QDM68 v" SOFTWARE_VERSION "</b><h3></center>"
-                     "Author : <i>Stephane `sOuSiX` C.</i><br><br>"
+                     "Author : Stephane <i>`sOuSiX`</i> C.<br><br>"
                      "Created with <a href=\"http://qt.nokia.com\">Qt SDK</a><br>"
                      "Check out sources @ <a href=\"https://github.com/sOuSiX/QDM68\">Github/QDM68</a>";
 
