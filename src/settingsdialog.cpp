@@ -35,7 +35,8 @@ void SettingsDialog::showEvent( QShowEvent * event )
 
 void SettingsDialog::openEngineDialog()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Select quake 3 engine"));
+    QFileInfo fileInfo( ui->leEngine->text() );
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Select quake 3 engine"), fileInfo.absolutePath());
 
     if ( !fileName.isEmpty() )
     {

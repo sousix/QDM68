@@ -36,7 +36,7 @@ protected:
     void displayDemosInfos( int );
     void initSettings();
     void saveSettings();
-    QModelIndex currentDemo();
+    QModelIndex currentDemoIndex();
     void emptyDemoInfos();
 
 protected slots:

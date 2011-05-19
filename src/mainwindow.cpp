@@ -227,9 +227,11 @@ void MainWindow::moveDemosTo()
         i++;
     }
     m_demoModel->submitAll();
+    displayDemosInfos( currentDemoIndex().row() );
 
     if( !allFileMoved )
         QMessageBox::warning( this, tr("Warning"), tr("One or more files could not be moved.") );
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -260,6 +262,7 @@ void MainWindow::deleteDemos()
         i++;
     }
     m_demoModel->submitAll();
+    displayDemosInfos( currentDemoIndex().row() );
 
     if( !allFileRemoved )
         QMessageBox::warning( this, tr("Warning"), tr("One or more files could not be deleted.") );
@@ -396,7 +399,7 @@ void MainWindow::createDemosList()
             m_demoModel->fetchMore();
     }
 
-    emptyDemoInfos();
+    displayDemosInfos( currentDemoIndex().row() );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -414,7 +417,7 @@ void MainWindow::onDemoParsed( int demoId, QString gameState, int current, int s
                                m_demoModel->index( indexList.at(0).row(), 9) );
 
         // If the demo parsed correspond to the demo selected, we display info
-        if( currentDemo().row() == indexList.at(0).row() )
+        if( currentDemoIndex().row() == indexList.at(0).row() )
         {
             displayDemosInfos( indexList.at(0).row() );
         }
@@ -436,8 +439,8 @@ void MainWindow::onDetailsClicked()
     ui->demoInfosBox->setVisible( !ui->demoInfosBox->isVisible()     );
     this->adjustSize();
 
-    if( currentDemo().isValid() )
-        processDemo( currentDemo() );
+    if( currentDemoIndex().isValid() )
+        processDemo( currentDemoIndex() );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -456,10 +459,21 @@ void MainWindow::onAboutClicked()
 
 void    MainWindow::displayDemosInfos( int row )
 {  
+    // If invalid row, delete infos, exit function
+    if( row < 0 )
+    {
+        emptyDemoInfos();
+        return;
+    }
+
     int i;
     const QStringList & rulesList = m_demoModel->data( m_demoModel->index( row, 8 ) ).toString().split ( "\\", QString::SkipEmptyParts );
     QMap<QString, QString>::iterator it;
-
+    QString varRefName = "";
+    QString varRefValue = "";
+    QString varDemoValue = "";
+    QMap<QString, QString> rulesMap;
+    QStringList pair;
 
     // Set title : Map, physic, time
 
@@ -468,13 +482,6 @@ void    MainWindow::displayDemosInfos( int row )
                                 + m_demoModel->data( m_demoModel->index( row, 5 ), Qt::DisplayRole ).toString() ); */
 
     // Display rules
-
-    QString varRefName = "";
-    QString varRefValue = "";
-    QString varDemoValue = "";
-
-    QMap<QString, QString> rulesMap;
-    QStringList pair;
 
     for( i = 0 ; i < rulesList.size() ; i++ )
     {
@@ -527,7 +534,7 @@ void MainWindow::emptyDemoInfos()
 
 void MainWindow::processDemo( const QModelIndex & index )
 {
-    if( !ui->demoInfosBox->isVisible() )
+    if( !ui->demoInfosBox->isVisible() || !index.isValid() )
         return;
 
     const QModelIndex & PlayerInfoIndex = m_demoModel->index( index.row(), 9 );
@@ -546,7 +553,7 @@ void MainWindow::processDemo( const QModelIndex & index )
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-QModelIndex MainWindow::currentDemo()
+QModelIndex MainWindow::currentDemoIndex()
 {
     if( ui->listView->selectionModel()->selectedIndexes().size() > 0 )
         return ui->listView->selectionModel()->selectedIndexes().at(0);
@@ -558,7 +565,10 @@ QModelIndex MainWindow::currentDemo()
 
 void MainWindow::playDemo()
 {
-    if( !QFile::exists(m_settings.engineFile) )
+    QFileInfo engineFile( m_settings.engineFile );
+    QString appPath = QDir::currentPath();
+
+    if( !engineFile.exists() )
     {
         QMessageBox msgBox;
         msgBox.setText( QString("Quake 3 engine not found") );
@@ -573,15 +583,14 @@ void MainWindow::playDemo()
     if( demoFolder != "" )
         demoFolder += "/";
 
-    QString command = m_settings.engineFile +
-                      " +set fs_game defrag" +
-                      " +demo " +
-                      demoFolder +
-                      currentDemo().data().toString();
+    QStringList args;
+    args << "+set" << "fs_game" << "defrag" << "+demo"
+         << demoFolder + currentDemoIndex().data().toString();
 
-    statusBar()->showMessage( QString(tr("Executing '%1'")).arg(command) );
-    QProcess::execute(command);
-    qDebug() << command;
+    QDir::setCurrent( engineFile.absolutePath() );
+    statusBar()->showMessage( QString(tr("Executing '%1'")).arg( engineFile.fileName() ) );
+    QProcess::startDetached( m_settings.engineFile, args );
+    QDir::setCurrent( appPath );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -774,8 +783,7 @@ void MainWindow::openSettingsDialog()
             m_settings.copy( newSettings );
             saveSettings();
             // Refresh variable list for current demo
-            if( currentDemo().isValid() )
-                displayDemosInfos( currentDemo().row() );
+            displayDemosInfos( currentDemoIndex().row() );
         }
     }else{
         m_settingsDialog->setSettings( m_settings );
