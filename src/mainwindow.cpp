@@ -308,12 +308,9 @@ void MainWindow::openDemosDialog()
 
     if ( !dirName.isEmpty() )
     {
-        if ( m_demosDir != newDir )
-        {
-            m_demosDir = newDir;
-            createDemosList();
-            saveSettings();
-        }
+        m_demosDir = newDir;
+        createDemosList();
+        saveSettings();
     }
 }
 
@@ -400,6 +397,7 @@ void MainWindow::createDemosList()
     }
 
     displayDemosInfos( currentDemoIndex().row() );
+    this->setWindowTitle( QString("QDM68 - %1").arg( m_demosDir.absolutePath() ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -468,7 +466,6 @@ void    MainWindow::displayDemosInfos( int row )
 
     int i;
     const QStringList & rulesList = m_demoModel->data( m_demoModel->index( row, 8 ) ).toString().split ( "\\", QString::SkipEmptyParts );
-    QMap<QString, QString>::iterator it;
     QString varRefName = "";
     QString varRefValue = "";
     QString varDemoValue = "";
@@ -622,6 +619,7 @@ void MainWindow::parseAndSaveGameState( QString gameState,
                                         QModelIndex rulesIndex,
                                         QModelIndex playerInfoIndex )
 {
+
     // Convert \sv_floodProtect\1\sv_maxPing\0\sv_minPing\0
     // To sv_floodProtect=1\sv_maxPing=0\sv_minPing=0
     if( gameState[0] == '\\' )
@@ -665,18 +663,17 @@ void MainWindow::parseAndSaveGameState( QString gameState,
         else if( property.at(0) == "hmodel" )
         {
             headModel = property.at(1).split( "/", QString::SkipEmptyParts );
-            // Sometimes, we have player type (i.e : klesk), but not skin (i.e : red)
+
             if( headModel.size() == 2 )
                 resource.setFileName( QString(":/image/%1").arg( property.at(1) ) );
-            else if ( headModel.size() == 1 )
+
+            // Sometimes, we have player type (i.e : klesk), but not skin (i.e : red)
+            if ( headModel.size() == 1 || !resource.isValid()  )
                 resource.setFileName( QString(":/image/%1/default").arg( headModel.at(0) ) );
-            else
-                // Skin not found ???
-                resource.setFileName( QString(":/image/sarge/default") );
 
             // Check that model exists. If it's a special model not in resource, we use the default skin
             if( !resource.isValid() )
-                resource.setFileName( QString(":/image/%1/default").arg( headModel.at(0) ) );
+                resource.setFileName( QString(":/image/unknown") );
         }
 
         if( playerName != "" && headModel.size() > 0 )
