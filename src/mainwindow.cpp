@@ -159,6 +159,9 @@ void MainWindow::selectWorst()
                      "WHERE d.id NOT IN (SELECT id FROM demos AS e WHERE e.map = d.map AND e.physic = d.physic AND e.multi = d.multi ORDER BY time ASC LIMIT 0,1)" );
 
     buildSelection(&query);
+
+    if( !m_demoModel->hasBoxChecked() )
+        statusBar()->showMessage("No worst demos found!");
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
