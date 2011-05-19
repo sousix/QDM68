@@ -11,7 +11,7 @@
 #include "listviewcustom.h"
 
 #define CFG_FILE "qdm68.cfg"
-#define SOFTWARE_VERSION "1.0"
+#define SOFTWARE_VERSION "1.0 beta1"
 
 namespace Ui {
     class MainWindow;
