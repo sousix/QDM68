@@ -50,7 +50,7 @@
             </font>
            </property>
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -69,6 +69,9 @@
              <bold>true</bold>
             </font>
            </property>
+           <property name="accessibleDescription">
+            <string/>
+           </property>
            <property name="text">
             <string>Solo :</string>
            </property>
@@ -80,7 +83,7 @@
          <item>
           <widget class="QLabel" name="lblSolo">
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -94,10 +97,10 @@
          <item>
           <widget class="QLabel" name="lblTotalVq3">
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -108,10 +111,10 @@
          <item>
           <widget class="QLabel" name="lblTotalCpm">
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -127,6 +130,9 @@
              <bold>true</bold>
             </font>
            </property>
+           <property name="accessibleDescription">
+            <string/>
+           </property>
            <property name="text">
             <string>Multi :</string>
            </property>
@@ -138,7 +144,7 @@
          <item>
           <widget class="QLabel" name="lblMulti">
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -152,10 +158,10 @@
          <item>
           <widget class="QLabel" name="lblSoloVq3">
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -166,10 +172,10 @@
          <item>
           <widget class="QLabel" name="lblSoloCpm">
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -196,7 +202,7 @@
          <item>
           <widget class="QLabel" name="lblTime">
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -210,10 +216,10 @@
          <item>
           <widget class="QLabel" name="lblMultiVq3">
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -224,10 +230,10 @@
          <item>
           <widget class="QLabel" name="lblMultiCpm">
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -238,10 +244,10 @@
          <item>
           <widget class="QLabel" name="lblTimeVq3">
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -252,10 +258,10 @@
          <item>
           <widget class="QLabel" name="lblTimeCpm">
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -298,7 +304,7 @@
           </font>
          </property>
          <property name="text">
-          <string>VQ3</string>
+          <string notr="true">VQ3</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -314,7 +320,7 @@
           </font>
          </property>
          <property name="text">
-          <string>CPM</string>
+          <string notr="true">CPM</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>

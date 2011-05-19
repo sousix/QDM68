@@ -70,7 +70,7 @@ void SettingsDialog::setSettings( QdmSettings settings )
     m_model->clear();
     m_model->setRowCount(settings.rules.size());
     m_model->setColumnCount(2);
-    m_model->setHeaderData(0, Qt::Horizontal, tr("Var"));
+    m_model->setHeaderData(0, Qt::Horizontal, tr("Variable"));
     m_model->setHeaderData(1, Qt::Horizontal, tr("Value"));
 
     row = 0;

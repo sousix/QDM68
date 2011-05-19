@@ -51,6 +51,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_textProgressBar = new QLabel();
     ui->statusBar->addPermanentWidget( m_textProgressBar );
     m_textProgressBar->setVisible( false );
+    // Parse all demos : for developper
+    ui->actionParseAll->setVisible( false );
 
     initSettings();
     createDemosList();
@@ -158,10 +160,10 @@ void MainWindow::selectWorst()
                      "FROM demos as d "
                      "WHERE d.id NOT IN (SELECT id FROM demos AS e WHERE e.map = d.map AND e.physic = d.physic AND e.multi = d.multi ORDER BY time ASC LIMIT 0,1)" );
 
-    buildSelection(&query);
+    buildSelection( &query );
 
     if( !m_demoModel->hasBoxChecked() )
-        statusBar()->showMessage("No worst demos found!");
+        statusBar()->showMessage( tr("No worst demos found!") );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -182,7 +184,7 @@ void MainWindow::copyDemosTo()
     if ( dirName.isEmpty() )
         return;
 
-    QProgressDialog progress(tr("Copying files..."), tr("Abort Copy"), 0, m_demoModel->countBoxChecked(), this);
+    QProgressDialog progress( tr("Copying files..."), tr("Abort Copy"), 0, m_demoModel->countBoxChecked(), this);
     progress.setWindowModality(Qt::WindowModal);
     int i, j=0;
 
@@ -243,7 +245,7 @@ void MainWindow::deleteDemos()
 {
     QMessageBox::StandardButton reply;
     reply = QMessageBox::question(this, tr("Deletion"),
-                                  QString(tr("Are you sure you want to delete %1 files ?")).arg(m_demoModel->countBoxChecked()),
+                                  QString( tr("Are you sure you want to delete %1 files ?") ).arg( m_demoModel->countBoxChecked() ),
                                   QMessageBox::Yes | QMessageBox::Cancel);
 
     if ( reply == QMessageBox::Cancel )
@@ -291,14 +293,14 @@ void MainWindow::updateSelectionInfos()
 {
     bool hasSelection = m_demoModel->hasBoxChecked();
 
-    ui->btnCopyTo->setEnabled(hasSelection);
-    ui->btnMoveTo->setEnabled(hasSelection);
-    ui->btnDelete->setEnabled(hasSelection);
+    ui->btnCopyTo->setEnabled( hasSelection );
+    ui->btnMoveTo->setEnabled( hasSelection );
+    ui->btnDelete->setEnabled( hasSelection );
 
     if( !hasSelection )
         statusBar()->showMessage("");
     else
-        statusBar()->showMessage( QString(tr("%1 demo(s) selected")).arg(m_demoModel->countBoxChecked()));
+        statusBar()->showMessage(QString( tr("%1 demo(s) selected") ).arg( m_demoModel->countBoxChecked() ));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -325,27 +327,27 @@ bool MainWindow::createDatabase()
     db.setDatabaseName(":memory:");
     if ( !db.open() )
     {
-        QMessageBox::critical(0, qApp->tr("Cannot open database"),
-                              qApp->tr( "Unable to establish a database connection.\n"
+        QMessageBox::critical( 0, "Cannot open database",
+                               "Unable to establish a database connection.\n"
                                         "This example needs SQLite support. Please read "
                                         "the Qt SQL driver documentation for information how "
                                         "to build it.\n\n"
-                                        "Click Cancel to exit."), QMessageBox::Cancel );
+                                        "Click Cancel to exit.", QMessageBox::Cancel );
         return false;
     }
 
     QSqlQuery query;
-    query.exec("CREATE TABLE demos "
-               "(id INT PRIMARY KEY, "
-               "filename VARCHAR(100),"
-               "map VARCHAR(50),"
-               "multi VARCHAR(3),"
-               "physic VARCHAR(3),"
-               "time VARCHAR(9),"
-               "author VARCHAR(50),"
-               "country VARCHAR(50),"
-               "player_infos TEXT,"
-               "rules BLOB)");
+    query.exec( "CREATE TABLE demos "
+                "(id INT PRIMARY KEY, "
+                "filename VARCHAR(100),"
+                "map VARCHAR(50),"
+                "multi VARCHAR(3),"
+                "physic VARCHAR(3),"
+                "time VARCHAR(9),"
+                "author VARCHAR(50),"
+                "country VARCHAR(50),"
+                "player_infos TEXT,"
+                "rules BLOB)" );
 
     return true;
 }
@@ -358,18 +360,13 @@ bool MainWindow::createDatabase()
 void MainWindow::createDemosList()
 {
     if( !m_demosDir.exists() )
-    {
-        qDebug() << "Directory doesn't exist";
         return;
-    }
 
     QSqlQuery query;
     QRegExp pattern( "([^\\[.]*)\\[([^\\..]*)\\.([^\\].]*)\\]([0-9]{2}\\.[0-9]{2}\\.[0-9]{3})\\(([^\\..]*)\\.([^\\).]*)\\)\\.dm_.*" );
     int i, nbDemos = 0;
 
-    if( m_demoModel->rowCount() != 0 && !m_demoModel->removeRows( 0, m_demoModel->rowCount() ) )
-        qDebug() << "Cannot remove rows";
-    else
+    if( m_demoModel->removeRows( 0, m_demoModel->rowCount() ) )
         m_demoModel->submitAll(); // Apply changement in DB
 
     for ( i=0 ; i < m_demosDir.entryInfoList().size() ; i++ )
@@ -389,7 +386,7 @@ void MainWindow::createDemosList()
         }
     }
     m_demoModel->select();
-    statusBar()->showMessage( QString(tr("%1 demos found")).arg(nbDemos) );
+    statusBar()->showMessage( QString(tr("%1 demo(s) found")).arg(nbDemos) );
 
     // Avoid a strange behaviour of Sql table model. Without that, only 256 rows are talen in account.
     // The reasons seems to be that sqlite doesn't know the number of rows affected by a "SELECT"
@@ -407,7 +404,7 @@ void MainWindow::createDemosList()
 
 void MainWindow::onDemoParsed( int demoId, QString gameState, int current, int size )
 {
-    m_textProgressBar->setText(QString("Analyzing... %1/%2").arg(size - current).arg(size));
+    m_textProgressBar->setText( QString( tr("Analyzing... %1/%2") ).arg(size - current).arg(size));
 
     const QModelIndexList indexList = m_demoModel->match( m_demoModel->index(0, 0), Qt::DisplayRole, demoId);
 
@@ -429,8 +426,8 @@ void MainWindow::onDemoParsed( int demoId, QString gameState, int current, int s
 
 void MainWindow::onThreadParserFinished()
 {
-    m_textProgressBar->setText("");
-    m_textProgressBar->setVisible(false);
+    m_textProgressBar->setText( "" );
+    m_textProgressBar->setVisible( false );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -448,12 +445,12 @@ void MainWindow::onDetailsClicked()
 
 void MainWindow::onAboutClicked()
 {
-    QString about =  "<center><h3><b>QDM68 v" SOFTWARE_VERSION "</b><h3></center>"
-                     "Author : Stephane <i>`sOuSiX`</i> C.<br><br>"
-                     "Created with <a href=\"http://qt.nokia.com\">Qt SDK</a><br>"
-                     "Check out sources @ <a href=\"https://github.com/sOuSiX/QDM68\">Github/QDM68</a>";
+    QString about =  "<center><h3><b>QDM68 v" SOFTWARE_VERSION "</b><h3></center>" +
+                     tr( "Author") + " : Stephane <i>`sOuSiX`</i> C.<br><br>" +
+                     tr( "Created with" ) + " <a href=\"http://qt.nokia.com\">Qt SDK</a><br>" +
+                     tr( "Checkout sources at" ) + " <a href=\"https://github.com/sOuSiX/QDM68\">Github/QDM68</a>";
 
-    QMessageBox::about( this, "About QDM68", about );
+    QMessageBox::about( this, tr( "About QDM68" ), about );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -506,7 +503,7 @@ void    MainWindow::displayDemosInfos( int row )
                 m_varModel->item( i , 1 )->setIcon( QIcon(":/image/warning") );
 
         }else{
-            m_varModel->setData( m_varModel->item( i , 1 )->index(), "Unavailable" );
+            m_varModel->setData( m_varModel->item( i , 1 )->index(), tr("Unavailable") );
             m_varModel->item( i , 1 )->setIcon( QIcon() );
             m_varModel->item( i , 1 )->setEnabled( false );
         }
@@ -522,7 +519,7 @@ void    MainWindow::displayDemosInfos( int row )
 
 void MainWindow::emptyDemoInfos()
 {
-    ui->frameDemo->setHtml("<div width=\"100%\" height=\"100%\" align=\"center\"><br><br><br><i><font color=\"grey\">No demo selected</font></i></div>");
+    ui->frameDemo->setHtml("<div width=\"100%\" height=\"100%\" align=\"center\"><br><br><br><i><font color=\"grey\">" + tr( "No demo selected" ) + "</font></i></div>");
     for( int i = 0 ; i < m_varModel->rowCount() ; i++ )
     {
         m_varModel->item( i, 1)->setText("");
@@ -571,7 +568,7 @@ void MainWindow::playDemo()
     if( !engineFile.exists() )
     {
         QMessageBox msgBox;
-        msgBox.setText( QString("Quake 3 engine not found") );
+        msgBox.setText( QString( tr("Quake 3 engine not found") ) );
         msgBox.setIcon( QMessageBox::Critical );
         msgBox.exec();
         return;
@@ -588,7 +585,7 @@ void MainWindow::playDemo()
          << demoFolder + currentDemoIndex().data().toString();
 
     QDir::setCurrent( engineFile.absolutePath() );
-    statusBar()->showMessage( QString(tr("Executing '%1'")).arg( engineFile.fileName() ) );
+    statusBar()->showMessage( QString( tr("Executing '%1'") ).arg( engineFile.fileName() ) );
     QProcess::startDetached( m_settings.engineFile, args );
     QDir::setCurrent( appPath );
 }
@@ -796,16 +793,16 @@ void MainWindow::initSettings()
 {
     if( !QFile::exists(CFG_FILE) )
     {
-        m_settings.rules.insert("timescale", "1");
-        m_settings.rules.insert("g_synchronousClients", "1");
-        m_settings.rules.insert("pmove_fixed", "0");
-        m_settings.rules.insert("pmove_msec", "8");
-        m_settings.rules.insert("sv_fps", "125");
-        m_settings.rules.insert("com_maxfps", "125");
-        m_settings.rules.insert("g_speed", "320");
-        m_settings.rules.insert("g_gravity", "800");
-        m_settings.rules.insert("g_knockback", "1000");
-        m_settings.rules.insert("sv_cheats", "0");
+        m_settings.rules.insert( "timescale", "1" );
+        m_settings.rules.insert( "g_synchronousClients", "1" );
+        m_settings.rules.insert( "pmove_fixed", "0" );
+        m_settings.rules.insert( "pmove_msec", "8" );
+        m_settings.rules.insert( "sv_fps", "125" );
+        m_settings.rules.insert( "com_maxfps", "125" );
+        m_settings.rules.insert( "g_speed", "320" );
+        m_settings.rules.insert( "g_gravity", "800" );
+        m_settings.rules.insert( "g_knockback", "1000" );
+        m_settings.rules.insert( "sv_cheats", "0" );
         m_settings.engineFile = "";
         m_demosDir = QDir::home();
         saveSettings();
@@ -815,15 +812,15 @@ void MainWindow::initSettings()
         QSettings iniSettings(CFG_FILE, QSettings::IniFormat, this);
         QStringList keys;
 
-        iniSettings.beginGroup("paths");
-        m_demosDir.setPath( iniSettings.value("demos_dir", QDir::home().absolutePath()).toString());
-        m_settings.engineFile = iniSettings.value("engine","").toString();
+        iniSettings.beginGroup( "paths" );
+        m_demosDir.setPath( iniSettings.value( "demos_dir", QDir::home().absolutePath()).toString() );
+        m_settings.engineFile = iniSettings.value( "engine" ,"" ).toString();
         iniSettings.endGroup();
 
-        iniSettings.beginGroup("rules");
+        iniSettings.beginGroup( "rules" );
         keys = iniSettings.childKeys();
         for (int i = 0; i < keys.size(); ++i)
-            m_settings.rules.insert( keys.at(i), iniSettings.value(keys.at(i),"").toString() );
+            m_settings.rules.insert( keys.at(i), iniSettings.value( keys.at(i),"" ).toString() );
         iniSettings.endGroup();
     }
 }
@@ -838,17 +835,17 @@ void MainWindow::saveSettings()
     if( !iniSettings.isWritable() )
     {
         QMessageBox msgBox;
-        msgBox.setText(tr("Settings cannot be saved."));
-        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setText( tr( "Settings cannot be saved." ) );
+        msgBox.setIcon( QMessageBox::Warning );
         msgBox.exec();
         return;
     }
 
-    iniSettings.beginGroup("paths");
-    iniSettings.setValue("demos_dir", m_demosDir.absolutePath());
-    iniSettings.setValue("engine", m_settings.engineFile);
+    iniSettings.beginGroup( "paths" );
+    iniSettings.setValue( "demos_dir", m_demosDir.absolutePath() );
+    iniSettings.setValue( "engine", m_settings.engineFile );
     iniSettings.endGroup();
-    iniSettings.beginGroup("rules");
+    iniSettings.beginGroup( "rules" );
     it = m_settings.rules.begin();
     while( it != m_settings.rules.end() )
     {
@@ -876,11 +873,11 @@ QString MainWindow::HtmlPlayerName( QString name )
     name.replace( "^9", "<font color=\"grey\">" );    // Grey
 
     for( int i=0 ; i<balises ; i++ )
-        name.append("</font>");
+        name.append( "</font>" );
 
     // Set default color to 'White'
-    name.prepend("<font color=\"#ffffff\">");
-    name.append("</font>");
+    name.prepend( "<font color=\"#ffffff\">" );
+    name.append( "</font>" );
 
     return name;
 }

@@ -43,3 +43,5 @@ FORMS    += mainwindow.ui \
 
 RESOURCES += \
     ressources.qrc
+
+TRANSLATIONS = qdm68_fr.ts
