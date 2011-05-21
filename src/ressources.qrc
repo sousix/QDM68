@@ -96,5 +96,6 @@
         <file alias="hunter/red">images/players/hunter/icon_red.png</file>
         <file alias="hunter/default">images/players/hunter/icon_default.png</file>
         <file alias="unknown">images/players/icon_unknown.png</file>
+        <file alias="lapin">images/icon/lapin_48.png</file>
     </qresource>
 </RCC>

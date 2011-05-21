@@ -155,7 +155,7 @@
     <message>
         <location filename="mainwindow.cpp" line="303"/>
         <source>%1 demo(s) selected</source>
-        <translation>%1 démo(s) slectionnée(s)</translation>
+        <translation>%1 démo(s) sélectionnée(s)</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="311"/>
@@ -196,7 +196,7 @@
     <message>
         <location filename="mainwindow.cpp" line="522"/>
         <source>No demo selected</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucune démo sélectionnée</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="571"/>
