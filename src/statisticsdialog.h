@@ -17,6 +17,7 @@ public:
     void updateStatistics( int nbSoloVq3, int nbSoloCpm,
                            int nbMultiVq3, int nbMultiCpm,
                            int nbMillisecVq3, int nbMillisecCpm );
+    QString getStats( int nb, int total );
 
 private:
     Ui::StatisticsDialog *ui;

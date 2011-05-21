@@ -708,8 +708,8 @@ void MainWindow::openStatisticsDialog()
     if( !m_statisticsDialog )
         m_statisticsDialog = new StatisticsDialog(this);
 
-    int soloVq3, soloCpm;
-    int multiVq3, multiCpm;
+    int soloVq3 = 0, soloCpm = 0;
+    int multiVq3 = 0, multiCpm = 0;
     int nbMillisecVq3 = 0, nbMillisecCpm = 0;
 
     QStringList list;

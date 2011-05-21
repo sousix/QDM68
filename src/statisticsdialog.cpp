@@ -39,39 +39,29 @@ void StatisticsDialog::updateStatistics( int nbSoloVq3, int nbSoloCpm,
 
     ui->lblTotal->setText( QString( "%1" ).arg( nbTotal ) );
 
-    // This test avoid division by zero
-    if( nbTotal > 0)
-    {
-        ui->lblTotalVq3->setText( QString( "%1 (%2%)" ).arg( nbVq3 ).arg( ( (float)nbVq3 / (float)nbTotal ) * 100, 0, 'f', 0 ) );
-        ui->lblTotalCpm->setText( QString( "%1 (%2%)" ).arg( nbCpm ).arg( ( (float)nbCpm / (float)nbTotal ) * 100, 0, 'f', 0 ) );
-    }else{
-        ui->lblTotalVq3->setText( "0" );
-        ui->lblTotalCpm->setText( "0" );
-    }
+    ui->lblTotalVq3->setText( getStats( nbVq3, nbTotal ) );
+    ui->lblTotalCpm->setText( getStats( nbCpm, nbTotal ) );
 
-    if( nbSolo > 0 )
-    {
-        ui->lblSolo->setText( QString( "%1 (%2%)" ).arg( nbSolo ).arg( ( (float)nbSolo / (float)nbTotal ) * 100, 0, 'f', 0 ) );
-        ui->lblSoloVq3->setText( QString( "%1 (%2%)" ).arg( nbSoloVq3 ).arg( ( (float)nbSoloVq3 / (float)nbSolo ) * 100, 0, 'f', 0 ) );
-        ui->lblSoloCpm->setText( QString( "%1 (%2%)" ).arg( nbSoloCpm ).arg( ( (float)nbSoloCpm / (float)nbSolo ) * 100, 0, 'f', 0 ) );
-    }else{
-        ui->lblSolo->setText( "0" );
-        ui->lblSoloVq3->setText( "0" );
-        ui->lblSoloCpm->setText( "0" );
-    }
+    ui->lblSolo->setText( getStats( nbSolo, nbTotal ) );
+    ui->lblSoloVq3->setText( getStats( nbSoloVq3, nbSolo ) );
+    ui->lblSoloCpm->setText( getStats( nbSoloCpm, nbSolo ) );
 
-    if( nbMulti > 0 )
-    {
-        ui->lblMulti->setText( QString( "%1 (%2%)"  ).arg( nbMulti ).arg( ( (float)nbMulti / (float)nbTotal ) * 100, 0, 'f', 0 ) );
-        ui->lblMultiVq3->setText( QString( "%1 (%2%)" ).arg( nbMultiVq3 ).arg( ( (float)nbMultiVq3 / (float)nbMulti ) * 100, 0, 'f', 0 ) );
-        ui->lblMultiCpm->setText( QString(" %1 (%2%)" ).arg( nbMultiCpm ).arg( ( (float)nbMultiCpm / (float)nbMulti ) * 100, 0, 'f', 0 ) );
-    }else{
-        ui->lblMulti->setText( "0" );
-        ui->lblMultiVq3->setText( "0" );
-        ui->lblMultiCpm->setText( "0" );
-    }
+    ui->lblMulti->setText( getStats( nbMulti, nbTotal ) );
+    ui->lblMultiVq3->setText( getStats( nbMultiVq3, nbMulti ) );
+    ui->lblMultiCpm->setText( getStats( nbMultiCpm, nbMulti ) );
 
     ui->lblTimeCpm->setText( timeCpm.toString( "H'h'mm'm'ss's'" ) );
     ui->lblTimeVq3->setText( timeVq3.toString( "H'h'mm'm'ss's'" ) );
     ui->lblTime->setText( timeTotal.toString( "H'h'mm'm'ss's'" ) );
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+QString StatisticsDialog::getStats( int nb, int total )
+{
+    // Avoid division by zero
+    if( total > 0 )
+        return QString( "%1 (%2%)"  ).arg( nb ).arg( ( (float)nb / (float)total ) * 100, 0, 'f', 0 );
+    else
+        return "0 (0%)";
 }
