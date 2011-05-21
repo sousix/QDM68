@@ -10,7 +10,6 @@
 #include "threadparser.h"
 #include "listviewcustom.h"
 
-#define CFG_FILE "qdm68.cfg"
 #define SOFTWARE_VERSION "1.0 beta1"
 
 namespace Ui {
@@ -34,7 +33,7 @@ protected:
     void updateSelectionInfos();
     void parseAndSaveGameState( QString, QModelIndex, QModelIndex );
     void displayDemosInfos( int );
-    void initSettings();
+    void loadSettings();
     void saveSettings();
     QModelIndex currentDemoIndex();
     void emptyDemoInfos();
@@ -61,7 +60,8 @@ protected slots:
 private:
     Ui::MainWindow * ui;
 
-    QdmSettings m_settings;
+    QdmSettings m_settingsData;
+    QSettings * m_settingsDevice;
     QDir m_demosDir;
     SqlTableModelCheckable * m_demoModel;
     SettingsDialog * m_settingsDialog;

@@ -44,4 +44,4 @@ FORMS    += mainwindow.ui \
 RESOURCES += \
     ressources.qrc
 
-TRANSLATIONS = qdm68_fr.ts
+TRANSLATIONS = translations/qdm68_fr.ts

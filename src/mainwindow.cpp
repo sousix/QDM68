@@ -8,7 +8,7 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    m_settings()
+    m_settingsData()
 {
     ui->setupUi( this );
     m_settingsDialog = NULL;
@@ -54,7 +54,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // Parse all demos : for developper
     ui->actionParseAll->setVisible( false );
 
-    initSettings();
+    loadSettings();
     createDemosList();
     buildRulesList();
 
@@ -105,12 +105,12 @@ void MainWindow::buildRulesList()
     QMap<QString, QString>::iterator it;
 
     m_varModel->clear();
-    m_varModel->setRowCount( m_settings.rules.size() );
+    m_varModel->setRowCount( m_settingsData.rules.size() );
     m_varModel->setColumnCount(2);
 
-    it = m_settings.rules.begin();
+    it = m_settingsData.rules.begin();
     i = 0;
-    while( it != m_settings.rules.end() )
+    while( it != m_settingsData.rules.end() )
     {
         // Insert key
         QStandardItem *item = new QStandardItem( it.key() );
@@ -456,7 +456,7 @@ void MainWindow::onAboutClicked()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 void    MainWindow::displayDemosInfos( int row )
-{  
+{
     // If invalid row, delete infos, exit function
     if( row < 0 )
     {
@@ -489,7 +489,7 @@ void    MainWindow::displayDemosInfos( int row )
     for( i = 0 ; i < m_varModel->rowCount() ; i++ )
     {
         varRefName = m_varModel->item( i , 0 )->data( Qt::DisplayRole ).toString();
-        varRefValue = m_settings.rules.value( m_varModel->item( i , 0 )->data( Qt::DisplayRole ).toString() );
+        varRefValue = m_settingsData.rules.value( m_varModel->item( i , 0 )->data( Qt::DisplayRole ).toString() );
         varDemoValue = rulesMap.value( m_varModel->item( i , 0 )->data( Qt::DisplayRole ).toString() );
 
         if( rulesMap.contains( varRefName ) )
@@ -562,7 +562,7 @@ QModelIndex MainWindow::currentDemoIndex()
 
 void MainWindow::playDemo()
 {
-    QFileInfo engineFile( m_settings.engineFile );
+    QFileInfo engineFile( m_settingsData.engineFile );
     QString appPath = QDir::currentPath();
 
     if( !engineFile.exists() )
@@ -586,7 +586,7 @@ void MainWindow::playDemo()
 
     QDir::setCurrent( engineFile.absolutePath() );
     statusBar()->showMessage( QString( tr("Executing '%1'") ).arg( engineFile.fileName() ) );
-    QProcess::startDetached( m_settings.engineFile, args );
+    QProcess::startDetached( m_settingsData.engineFile, args );
     QDir::setCurrent( appPath );
 }
 
@@ -656,7 +656,7 @@ void MainWindow::parseAndSaveGameState( QString gameState,
     {
         property = propertyStringList.at(row).split( "=", QString::KeepEmptyParts );
 
-        if( m_settings.rules.contains( property.at(0) ) )
+        if( m_settingsData.rules.contains( property.at(0) ) )
             demoRules += propertyStringList.at(row) + "\\";
         else if( property.at(0) == "n" )
             playerName = property.at(1);
@@ -768,60 +768,64 @@ void MainWindow::openSettingsDialog()
     if( !m_settingsDialog )
     {
         m_settingsDialog = new SettingsDialog(this);
-        m_settingsDialog->setSettings( m_settings );
+        m_settingsDialog->setSettings( m_settingsData );
     }
 
     if( m_settingsDialog->exec() == 1 )
     {
         QdmSettings newSettings = m_settingsDialog->getSettings();
 
-        if( m_settings.isEqual( newSettings ) )
+        if( m_settingsData.isEqual( newSettings ) )
         {
-            m_settings.copy( newSettings );
+            m_settingsData.copy( newSettings );
             saveSettings();
             // Refresh variable list for current demo
             displayDemosInfos( currentDemoIndex().row() );
         }
     }else{
-        m_settingsDialog->setSettings( m_settings );
+        m_settingsDialog->setSettings( m_settingsData );
     }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MainWindow::initSettings()
+void MainWindow::loadSettings()
 {
-    if( !QFile::exists(CFG_FILE) )
+    // On Windows don't put settings file into "document and settings"
+    // On linux, it will be $HOME/.config/QDM68/qdm68.ini
+    #ifdef Q_WS_WIN
+        m_settingsDevice = new QSettings( "qdm68.ini", QSettings::IniFormat, this );
+    #else
+        m_settingsDevice = new QSettings( QSettings::IniFormat, QSettings::UserScope, "QDM68", "qdm68" );
+    #endif
+
+    if( m_settingsDevice->allKeys().count() == 0 )
     {
-        m_settings.rules.insert( "timescale", "1" );
-        m_settings.rules.insert( "g_synchronousClients", "1" );
-        m_settings.rules.insert( "pmove_fixed", "0" );
-        m_settings.rules.insert( "pmove_msec", "8" );
-        m_settings.rules.insert( "sv_fps", "125" );
-        m_settings.rules.insert( "com_maxfps", "125" );
-        m_settings.rules.insert( "g_speed", "320" );
-        m_settings.rules.insert( "g_gravity", "800" );
-        m_settings.rules.insert( "g_knockback", "1000" );
-        m_settings.rules.insert( "sv_cheats", "0" );
-        m_settings.engineFile = "";
+        m_settingsData.rules.insert( "timescale", "1" );
+        m_settingsData.rules.insert( "g_synchronousClients", "1" );
+        m_settingsData.rules.insert( "pmove_fixed", "0" );
+        m_settingsData.rules.insert( "pmove_msec", "8" );
+        m_settingsData.rules.insert( "sv_fps", "125" );
+        m_settingsData.rules.insert( "com_maxfps", "125" );
+        m_settingsData.rules.insert( "g_speed", "320" );
+        m_settingsData.rules.insert( "g_gravity", "800" );
+        m_settingsData.rules.insert( "g_knockback", "1000" );
+        m_settingsData.rules.insert( "sv_cheats", "0" );
+        m_settingsData.engineFile = "";
         m_demosDir = QDir::home();
         saveSettings();
-
     }else{
-
-        QSettings iniSettings(CFG_FILE, QSettings::IniFormat, this);
         QStringList keys;
+        m_settingsDevice->beginGroup( "paths" );
+        m_demosDir.setPath( m_settingsDevice->value( "demos_dir", QDir::home().absolutePath()).toString() );
+        m_settingsData.engineFile = m_settingsDevice->value( "engine" ,"" ).toString();
+        m_settingsDevice->endGroup();
 
-        iniSettings.beginGroup( "paths" );
-        m_demosDir.setPath( iniSettings.value( "demos_dir", QDir::home().absolutePath()).toString() );
-        m_settings.engineFile = iniSettings.value( "engine" ,"" ).toString();
-        iniSettings.endGroup();
-
-        iniSettings.beginGroup( "rules" );
-        keys = iniSettings.childKeys();
+        m_settingsDevice->beginGroup( "rules" );
+        keys = m_settingsDevice->childKeys();
         for (int i = 0; i < keys.size(); ++i)
-            m_settings.rules.insert( keys.at(i), iniSettings.value( keys.at(i),"" ).toString() );
-        iniSettings.endGroup();
+            m_settingsData.rules.insert( keys.at(i), m_settingsDevice->value( keys.at(i),"" ).toString() );
+        m_settingsDevice->endGroup();
     }
 }
 
@@ -830,9 +834,8 @@ void MainWindow::initSettings()
 void MainWindow::saveSettings()
 {
     QMap<QString, QString>::iterator it;
-    QSettings iniSettings(CFG_FILE, QSettings::IniFormat, this);
 
-    if( !iniSettings.isWritable() )
+    if( !m_settingsDevice->isWritable() )
     {
         QMessageBox msgBox;
         msgBox.setText( tr( "Settings cannot be saved." ) );
@@ -841,18 +844,18 @@ void MainWindow::saveSettings()
         return;
     }
 
-    iniSettings.beginGroup( "paths" );
-    iniSettings.setValue( "demos_dir", m_demosDir.absolutePath() );
-    iniSettings.setValue( "engine", m_settings.engineFile );
-    iniSettings.endGroup();
-    iniSettings.beginGroup( "rules" );
-    it = m_settings.rules.begin();
-    while( it != m_settings.rules.end() )
+    m_settingsDevice->beginGroup( "paths" );
+    m_settingsDevice->setValue( "demos_dir", m_demosDir.absolutePath() );
+    m_settingsDevice->setValue( "engine", m_settingsData.engineFile );
+    m_settingsDevice->endGroup();
+    m_settingsDevice->beginGroup( "rules" );
+    it = m_settingsData.rules.begin();
+    while( it != m_settingsData.rules.end() )
     {
-        iniSettings.setValue(it.key(),it.value());
+        m_settingsDevice->setValue(it.key(),it.value());
         it++;
     }
-    iniSettings.endGroup();
+    m_settingsDevice->endGroup();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
