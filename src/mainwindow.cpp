@@ -793,7 +793,7 @@ void MainWindow::loadSettings()
 {
     // On Windows don't put settings file into "document and settings"
     // On linux, it will be $HOME/.config/QDM68/qdm68.ini
-    #ifdef Q_WS_WIN
+    #ifdef Q_OS_WIN32
         m_settingsDevice = new QSettings( "qdm68.ini", QSettings::IniFormat, this );
     #else
         m_settingsDevice = new QSettings( QSettings::IniFormat, QSettings::UserScope, "QDM68", "qdm68" );
