@@ -45,3 +45,7 @@ RESOURCES += \
     ressources.qrc
 
 TRANSLATIONS = translations/qdm68_fr.ts
+
+win32{
+    RC_FILE = images/icon/win32_icon.rc
+}

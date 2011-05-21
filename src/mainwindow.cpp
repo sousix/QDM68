@@ -84,10 +84,10 @@ void MainWindow::buildSelection( QSqlQuery * query )
     {
         indexList = m_demoModel->match( m_demoModel->index(0, 0),
                                         Qt::DisplayRole,
-                                        QVariant(query->value(0).toInt()).toInt() );
+                                        QVariant( query->value(0).toInt()).toInt() );
         if( indexList.count() > 0 )
         {
-            m_demoModel->setData( m_demoModel->index(indexList.at(0).row(), 1),
+            m_demoModel->setData( m_demoModel->index( indexList.at(0).row(), 1),
                                   Qt::Checked,
                                   Qt::CheckStateRole );
         }
@@ -243,12 +243,14 @@ void MainWindow::moveDemosTo()
 
 void MainWindow::deleteDemos()
 {
-    QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, tr("Deletion"),
-                                  QString( tr("Are you sure you want to delete %1 files ?") ).arg( m_demoModel->countBoxChecked() ),
-                                  QMessageBox::Yes | QMessageBox::Cancel);
+    QMessageBox question( QMessageBox::Question,
+                            tr("Deletion"),
+                            tr("Are you sure you want to delete %1 files ?").arg( m_demoModel->countBoxChecked() ),
+                            QMessageBox::Yes | QMessageBox::Cancel );
+    question.setButtonText( QMessageBox::Yes, tr("Yes") );
+    question.setButtonText( QMessageBox::Cancel, tr("Cancel") );
 
-    if ( reply == QMessageBox::Cancel )
+    if ( question.exec() == QMessageBox::Cancel )
         return;
 
     bool isRemoved;
