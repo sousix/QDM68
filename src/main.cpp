@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
     // Translation
     QString locale = QLocale::system().name().section( '_', 0, 0 );
     QTranslator translator;
-    translator.load( "qdm68_" + locale );
+    translator.load( "translations/qdm68_" + locale );
     app.installTranslator( &translator );
 
     MainWindow w;
