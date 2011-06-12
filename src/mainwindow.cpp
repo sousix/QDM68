@@ -42,6 +42,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect( ui->actionAbout, SIGNAL(triggered()), this, SLOT(onAboutClicked()) );
     connect( ui->btnPlayDemo, SIGNAL(released()), this, SLOT(playDemo()) );
     connect( ui->btnDetails, SIGNAL(released()), this, SLOT(onDetailsClicked()) );
+    connect( ui->lineSearch, SIGNAL(textChanged(QString)), this, SLOT(onSearchDemo(QString)) );
     connect( ui->listView, SIGNAL(selectionChanged(const QModelIndex &)), this, SLOT(processDemo(const QModelIndex &)) );
     connect( m_thread, SIGNAL(demoParsed(int, QString, int, int)), this, SLOT(onDemoParsed(int, QString, int, int)) );
     connect( m_thread, SIGNAL(finished()), this, SLOT(onThreadParserFinished()) );
@@ -84,10 +85,11 @@ void MainWindow::buildSelection( QSqlQuery * query )
     {
         indexList = m_demoModel->match( m_demoModel->index(0, 0),
                                         Qt::DisplayRole,
-                                        QVariant( query->value(0).toInt()).toInt() );
+                                        QVariant( query->value(0).toInt() ).toInt() );
+
         if( indexList.count() > 0 )
         {
-            m_demoModel->setData( m_demoModel->index( indexList.at(0).row(), 1),
+            m_demoModel->setData( m_demoModel->index( indexList.at(0).row(), 1 ),
                                   Qt::Checked,
                                   Qt::CheckStateRole );
         }
@@ -156,9 +158,16 @@ void MainWindow::invertSelection()
 
 void MainWindow::selectWorst()
 {
-    QSqlQuery query( "SELECT d.id, d.map, d.physic "
-                     "FROM demos as d "
-                     "WHERE d.id NOT IN (SELECT id FROM demos AS e WHERE e.map = d.map AND e.physic = d.physic AND e.multi = d.multi ORDER BY time ASC LIMIT 0,1)" );
+    QSqlQuery query( "SELECT d.id, d.map, d.physic \
+                      FROM demos as d \
+                      WHERE d.id NOT IN ( SELECT id FROM demos AS e \
+                                          WHERE e.map = d.map \
+                                          AND e.physic = d.physic \
+                                          AND e.multi = d.multi \
+                                          AND " +  m_demoModel->filter() + " \
+                                          ORDER BY time ASC \
+                                          LIMIT 0,1) \
+                     AND " + m_demoModel->filter() );
 
     buildSelection( &query );
 
@@ -315,6 +324,7 @@ void MainWindow::openDemosDialog()
 
     if ( !dirName.isEmpty() )
     {
+        ui->lineSearch->setText("");
         m_demosDir = newDir;
         createDemosList();
         saveSettings();
@@ -373,7 +383,7 @@ void MainWindow::createDemosList()
 
     for ( i=0 ; i < m_demosDir.entryInfoList().size() ; i++ )
     {
-        if( pattern.exactMatch( m_demosDir.entryInfoList().at(i).fileName()) )
+        if( pattern.exactMatch( m_demosDir.entryInfoList().at(i).fileName() ) )
         {
             nbDemos++;
             pattern.indexIn( m_demosDir.entryInfoList().at(i).fileName() );
@@ -390,13 +400,7 @@ void MainWindow::createDemosList()
     m_demoModel->select();
     statusBar()->showMessage( QString(tr("%1 demo(s) found")).arg(nbDemos) );
 
-    // Avoid a strange behaviour of Sql table model. Without that, only 256 rows are talen in account.
-    // The reasons seems to be that sqlite doesn't know the number of rows affected by a "SELECT"
-    if( m_demoModel->rowCount() == 256 )
-    {
-        while(m_demoModel->canFetchMore())
-            m_demoModel->fetchMore();
-    }
+    this->fetchMoreDemos();
 
     displayDemosInfos( currentDemoIndex().row() );
     this->setWindowTitle( QString("QDM68 - %1").arg( m_demosDir.absolutePath() ) );
@@ -453,6 +457,19 @@ void MainWindow::onAboutClicked()
                      tr( "Checkout sources at" ) + " <a href=\"https://github.com/sOuSiX/QDM68\">Github/QDM68</a>";
 
     QMessageBox::about( this, tr( "About QDM68" ), about );
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+void MainWindow::onSearchDemo( QString text )
+{
+    if( text != "" )
+        m_demoModel->setFilter( QString(" filename LIKE '\%%1\%' ").arg(text) );
+    else
+        m_demoModel->setFilter( "1" );
+
+    this->fetchMoreDemos();
+    statusBar()->showMessage( QString(tr("%1 demo(s) found")).arg(m_demoModel->rowCount()) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -524,8 +541,8 @@ void MainWindow::emptyDemoInfos()
     ui->frameDemo->setHtml("<div width=\"100%\" height=\"100%\" align=\"center\"><br><br><br><i><font color=\"grey\">" + tr( "No demo selected" ) + "</font></i></div>");
     for( int i = 0 ; i < m_varModel->rowCount() ; i++ )
     {
-        m_varModel->item( i, 1)->setText("");
-        m_varModel->item( i, 1)->setIcon( QIcon() );
+        m_varModel->item( i, 1 )->setText("");
+        m_varModel->item( i, 1 )->setIcon( QIcon() );
     }
 }
 
@@ -719,31 +736,31 @@ void MainWindow::openStatisticsDialog()
 
     query.exec( "SELECT count(id) "
                 "FROM demos "
-                "WHERE upper(physic) = 'VQ3' AND upper(multi) = 'MDF' ");
+                "WHERE upper(physic) = 'VQ3' AND upper(multi) = 'MDF' AND " + m_demoModel->filter() );
     if( query.next() )
         multiVq3 = query.value(0).toInt();
 
     query.exec( "SELECT count(id) "
                 "FROM demos "
-                "WHERE upper(physic) = 'VQ3' AND upper(multi) = 'DF' ");
+                "WHERE upper(physic) = 'VQ3' AND upper(multi) = 'DF' AND " + m_demoModel->filter() );
     if( query.next() )
         soloVq3 = query.value(0).toInt();
 
     query.exec( "SELECT count(id) "
                 "FROM demos "
-                "WHERE upper(physic) = 'CPM' AND upper(multi) = 'DF' ");
+                "WHERE upper(physic) = 'CPM' AND upper(multi) = 'DF' AND " + m_demoModel->filter() );
     if( query.next() )
         soloCpm = query.value(0).toInt();
 
     query.exec( "SELECT count(id) "
                 "FROM demos "
-                "WHERE upper(physic) = 'CPM' AND upper(multi) = 'MDF' ");
+                "WHERE upper(physic) = 'CPM' AND upper(multi) = 'MDF' AND " + m_demoModel->filter() );
     if( query.next() )
         multiCpm = query.value(0).toInt();
 
     query.exec( "SELECT time "
                 "FROM demos "
-                "WHERE upper(physic) = 'VQ3' ");
+                "WHERE upper(physic) = 'VQ3' AND " + m_demoModel->filter() );
     while( query.next() )
     {
         list = query.value(0).toString().split('.');
@@ -752,7 +769,7 @@ void MainWindow::openStatisticsDialog()
 
     query.exec( "SELECT time "
                 "FROM demos "
-                "WHERE upper(physic) = 'CPM' ");
+                "WHERE upper(physic) = 'CPM' AND " + m_demoModel->filter() );
     while( query.next() )
     {
         list = query.value(0).toString().split('.');
@@ -786,6 +803,19 @@ void MainWindow::openSettingsDialog()
         }
     }else{
         m_settingsDialog->setSettings( m_settingsData );
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+void MainWindow::fetchMoreDemos()
+{
+    // Avoid a strange behaviour of Sql table model. Without that, only 256 rows are talen in account.
+    // The reasons seems to be that sqlite doesn't know the number of rows affected by a "SELECT"
+    if( m_demoModel->rowCount() == 256 )
+    {
+        while(m_demoModel->canFetchMore())
+            m_demoModel->fetchMore();
     }
 }
 

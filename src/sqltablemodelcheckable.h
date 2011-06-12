@@ -21,6 +21,7 @@ public:
     bool hasBoxChecked();
     void clearBox();
     int countBoxChecked();
+    QString filter();
 
 protected:
     int primaryKey( const int row ) const;

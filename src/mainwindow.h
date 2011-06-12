@@ -37,6 +37,7 @@ protected:
     void saveSettings();
     QModelIndex currentDemoIndex();
     void emptyDemoInfos();
+    void fetchMoreDemos();
 
 protected slots:
     void invertSelection();
@@ -56,6 +57,7 @@ protected slots:
     void copyDemosTo();
     void moveDemosTo();
     void deleteDemos();
+    void onSearchDemo( QString );
 
 private:
     Ui::MainWindow * ui;

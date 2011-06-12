@@ -76,7 +76,7 @@ bool SqlTableModelCheckable::removeRows ( int row, int count, const QModelIndex 
             if( m_idList.contains( primaryKey( i ) ) )
             {
                 m_idList.erase( m_idList.find( primaryKey( i ) ) );
-                //emit dataChanged( this->index(i, 1, parent), this->index(i, 1, parent) );
+                emit dataChanged( this->index(i, 1, parent), this->index(i, 1, parent) );
             }
         }
     }
@@ -104,5 +104,15 @@ int SqlTableModelCheckable::countBoxChecked()
 void SqlTableModelCheckable::clearBox()
 {
     m_idList.clear();
-    emit dataChanged( QModelIndex(), QModelIndex() );
+    emit dataChanged( this->index(0, 1), this->index(this->rowCount()-1, 1) );
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+QString SqlTableModelCheckable::filter()
+{
+    if( QSqlTableModel::filter().isEmpty() )
+        return "1";
+
+    return QSqlTableModel::filter();
 }
