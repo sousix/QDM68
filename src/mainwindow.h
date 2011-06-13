@@ -29,7 +29,7 @@
 #include "threadparser.h"
 #include "listviewcustom.h"
 
-#define SOFTWARE_VERSION "1.0 beta2"
+#define SOFTWARE_VERSION "1.0 beta3"
 
 namespace Ui {
     class MainWindow;
