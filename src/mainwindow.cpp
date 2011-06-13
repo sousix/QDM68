@@ -1,3 +1,22 @@
+/*
+* Copyright (C) 2011 Stephane 'sOuSiX' C.
+*
+* This library is free software; you can redistribute it and/or
+* modify it under the terms of the GNU Library General Public
+* License as published by the Free Software Foundation; either
+* version 2 of the License, or (at your option) any later version.
+*
+* This library is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+* Library General Public License for more details.
+*
+* You should have received a copy of the GNU Library General Public License
+* along with this library; see the file COPYING.LIB. If not, write to
+* the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA 02110-1301, USA.
+*/
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <iostream>
@@ -456,7 +475,7 @@ void MainWindow::onAboutClicked()
             tr( "Thanks to") + " : uZu (Linux package)" +
             + "<br><br>" +
             tr( "Created with" ) + " <a href=\"http://qt.nokia.com\">Qt SDK</a><br>" +
-            tr( "This software use ") + "<a href=\"http://skuller-vidnoe.narod.ru/q3sdc.htm\">q3sdc</a><br>" +
+            tr( "This software use ") + " <a href=\"http://skuller-vidnoe.narod.ru/q3sdc.htm\">q3sdc</a><br>" +
             tr( "Checkout sources at" ) + " <a href=\"https://github.com/sOuSiX/QDM68\">Github/QDM68</a><br>";
 
     QMessageBox::about( this, tr( "About QDM68" ), about );
