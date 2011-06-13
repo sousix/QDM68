@@ -776,7 +776,10 @@ void MainWindow::openStatisticsDialog()
         nbMillisecCpm += list.at(0).toInt() * 60000 + list.at(1).toInt() * 1000 + list.at(2).toInt();
     }
 
-    m_statisticsDialog->updateStatistics( soloVq3, soloCpm, multiVq3, multiCpm, nbMillisecVq3, nbMillisecCpm );
+    m_statisticsDialog->updateStatistics( soloVq3, soloCpm,
+                                          multiVq3, multiCpm,
+                                          nbMillisecVq3, nbMillisecCpm,
+                                          m_demoModel->filter() != "1" );
     m_statisticsDialog->exec();
 }
 

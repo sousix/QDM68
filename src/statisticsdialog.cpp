@@ -22,7 +22,8 @@ StatisticsDialog::~StatisticsDialog()
 
 void StatisticsDialog::updateStatistics( int nbSoloVq3, int nbSoloCpm,
                                          int nbMultiVq3, int nbMultiCpm,
-                                         int nbMillisecVq3, int nbMillisecCpm )
+                                         int nbMillisecVq3, int nbMillisecCpm,
+                                         bool isFromSearchResults )
 {
     int nbSolo = nbSoloVq3 + nbSoloCpm;
     int nbMulti = nbMultiVq3 + nbMultiCpm;
@@ -53,6 +54,8 @@ void StatisticsDialog::updateStatistics( int nbSoloVq3, int nbSoloCpm,
     ui->lblTimeCpm->setText( timeCpm.toString( "H'h'mm'm'ss's'" ) );
     ui->lblTimeVq3->setText( timeVq3.toString( "H'h'mm'm'ss's'" ) );
     ui->lblTime->setText( timeTotal.toString( "H'h'mm'm'ss's'" ) );
+
+    ui->labelInfoSearch->setVisible( isFromSearchResults );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

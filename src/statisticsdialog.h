@@ -16,7 +16,9 @@ public:
     ~StatisticsDialog();
     void updateStatistics( int nbSoloVq3, int nbSoloCpm,
                            int nbMultiVq3, int nbMultiCpm,
-                           int nbMillisecVq3, int nbMillisecCpm );
+                           int nbMillisecVq3, int nbMillisecCpm,
+                           bool isFromSearchResults);
+
     QString getStats( int nb, int total );
 
 private:
