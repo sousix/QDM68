@@ -1,14 +1,32 @@
-                                                       
+       
      .::::::.  :::::::-.  .        :      .:.  .::::.    
     ,;;'```';;, ;;,   `';,;;,.    ;;;   ,;'   `;.  ,;'   
     [[[     [[[\`[[     [[[[[[, ,[[[[,,[[.od8b  [nn[,    
     "$$c  cc$$$" $$,    $$$$$$$$$$"$$$$$$"  "$$$"   $c   
      "*8bo,Y88b, 888_,o8P'888 Y88" 888oY8b,,d8PYb,_,8P   
        "*YP" "M" MMMMP"`  MMM  M'  "MMM "YMP"   "YMP"    
-                                                       
 
 -----------------------------------------------------------
--- Version x.x (xxx 2011)                                --
+-- Version 1.0 beta3 (June 2011)                         --
 -----------------------------------------------------------
 -- Created by sOuSiX                                     --
+-- License GPL v2                         		 --
 -----------------------------------------------------------
+
+QDM68 is a Quake 3 DeFRaG demo manager that allow you to :
+- Delete, move or copy your worst (or best) demos
+- See informations about your demos (Players, rules)
+- Check and modify rules
+- See some statistics about your demos
+- Play a demo
+
+Note : You can add (or delete) new rules by modifying the 
+configuration  file 'QDM68.ini'.
+On windows it is situated in the QDM68 folder.
+On Linux it is situated $HOME/.Config/QDM68 folder.
+
+-----------------------------------------------------------
+-- Thanks to : uZu for Linux package                     --
+-----------------------------------------------------------
+-- Created with Qt 4 SDK 		 	 	 --
+-- This software use q3sdc by Andrey '[SkulleR]' Nazarov --
