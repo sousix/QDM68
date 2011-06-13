@@ -451,10 +451,13 @@ void MainWindow::onDetailsClicked()
 
 void MainWindow::onAboutClicked()
 {
-    QString about =  "<center><h3><b>QDM68 v" SOFTWARE_VERSION "</b><h3></center>" +
-                     tr( "Author") + " : Stephane <i>`sOuSiX`</i> C.<br><br>" +
-                     tr( "Created with" ) + " <a href=\"http://qt.nokia.com\">Qt SDK</a><br>" +
-                     tr( "Checkout sources at" ) + " <a href=\"https://github.com/sOuSiX/QDM68\">Github/QDM68</a>";
+    QString about =  "<h3><b>QDM68 v" SOFTWARE_VERSION "</b></h3>" +
+            tr( "Author") + " : Stephane <i>`sOuSiX`</i> C.<br>" +
+            tr( "Thanks to") + " : uZu (Linux package)" +
+            + "<br><br>" +
+            tr( "Created with" ) + " <a href=\"http://qt.nokia.com\">Qt SDK</a><br>" +
+            tr( "This software use ") + "<a href=\"http://skuller-vidnoe.narod.ru/q3sdc.htm\">q3sdc</a><br>" +
+            tr( "Checkout sources at" ) + " <a href=\"https://github.com/sOuSiX/QDM68\">Github/QDM68</a><br>";
 
     QMessageBox::about( this, tr( "About QDM68" ), about );
 }
