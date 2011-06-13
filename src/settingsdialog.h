@@ -27,18 +27,21 @@
 typedef struct QdmSettings
 {
     QString engineFile;
+    bool distinctPlayer;
     QMap<QString, QString> rules;
 
     bool isEqual( QdmSettings other )
     {
         return( other.engineFile != this->engineFile ||
-                other.rules != this->rules );
+                other.rules != this->rules ||
+                other.distinctPlayer != this->distinctPlayer );
     }
 
     void copy( QdmSettings other )
     {
         this->engineFile = other.engineFile;
         this->rules = other.rules;
+        this->distinctPlayer = other.distinctPlayer;
     }
 
 } QdmSettings;

@@ -177,16 +177,33 @@ void MainWindow::invertSelection()
 
 void MainWindow::selectWorst()
 {
-    QSqlQuery query( "SELECT d.id, d.map, d.physic \
-                      FROM demos as d \
-                      WHERE d.id NOT IN ( SELECT id FROM demos AS e \
-                                          WHERE e.map = d.map \
-                                          AND e.physic = d.physic \
-                                          AND e.multi = d.multi \
-                                          AND " +  m_demoModel->filter() + " \
-                                          ORDER BY time ASC \
-                                          LIMIT 0,1) \
-                     AND " + m_demoModel->filter() );
+    QSqlQuery query;
+    if( !m_settingsData.distinctPlayer )
+    {
+        query.exec( "SELECT d.id, d.map, d.physic \
+                    FROM demos as d \
+                    WHERE d.id NOT IN ( SELECT id FROM demos AS e \
+                                        WHERE e.map = d.map \
+                                        AND e.physic = d.physic \
+                                        AND e.multi = d.multi \
+                                        AND " +  m_demoModel->filter() + " \
+                                        ORDER BY time ASC \
+                                        LIMIT 0,1) \
+                    AND " + m_demoModel->filter() );
+    }else{
+        query.exec( "SELECT d.id, d.map, d.physic, d.author \
+                    FROM demos as d \
+                    WHERE d.id NOT IN ( SELECT id FROM demos AS e \
+                                        WHERE e.map = d.map \
+                                        AND e.physic = d.physic \
+                                        AND e.multi = d.multi \
+                                        AND e.author = d.author \
+                                        AND " +  m_demoModel->filter() + " \
+                                        ORDER BY time ASC \
+                                        LIMIT 0,1) \
+                    AND " + m_demoModel->filter() );
+    }
+
 
     buildSelection( &query );
 
@@ -869,6 +886,7 @@ void MainWindow::loadSettings()
         m_settingsData.rules.insert( "g_knockback", "1000" );
         m_settingsData.rules.insert( "sv_cheats", "0" );
         m_settingsData.engineFile = "";
+        m_settingsData.distinctPlayer = true;
         m_demosDir = QDir::home();
         saveSettings();
     }else{
@@ -876,6 +894,7 @@ void MainWindow::loadSettings()
         m_settingsDevice->beginGroup( "paths" );
         m_demosDir.setPath( m_settingsDevice->value( "demos_dir", QDir::home().absolutePath()).toString() );
         m_settingsData.engineFile = m_settingsDevice->value( "engine" ,"" ).toString();
+        m_settingsData.distinctPlayer = m_settingsDevice->value( "distinct_player" ,"" ).toInt();
         m_settingsDevice->endGroup();
 
         m_settingsDevice->beginGroup( "rules" );
@@ -904,6 +923,7 @@ void MainWindow::saveSettings()
     m_settingsDevice->beginGroup( "paths" );
     m_settingsDevice->setValue( "demos_dir", m_demosDir.absolutePath() );
     m_settingsDevice->setValue( "engine", m_settingsData.engineFile );
+    m_settingsDevice->setValue( "distinct_player", (int)m_settingsData.distinctPlayer );
     m_settingsDevice->endGroup();
     m_settingsDevice->beginGroup( "rules" );
     it = m_settingsData.rules.begin();

@@ -75,6 +75,7 @@ QdmSettings SettingsDialog::getSettings()
                                m_model->item(i, 1)->text() );
     }
     settings.engineFile = ui->leEngine->text();
+    settings.distinctPlayer = ui->boxDistinctPlayer->isChecked();
 
     return settings;
 }
@@ -108,5 +109,6 @@ void SettingsDialog::setSettings( QdmSettings settings )
     }
     ui->tblRules->resizeColumnsToContents();
 
+    ui->boxDistinctPlayer->setChecked( settings.distinctPlayer );
     ui->leEngine->setText( settings.engineFile );
 }

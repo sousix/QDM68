@@ -96,7 +96,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="473"/>
-        <location filename="../mainwindow.cpp" line="481"/>
+        <location filename="../mainwindow.cpp" line="498"/>
         <source>About QDM68</source>
         <translation>A propos de QDM68</translation>
     </message>
@@ -116,131 +116,131 @@
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="194"/>
+        <location filename="../mainwindow.cpp" line="211"/>
         <source>No worst demos found!</source>
         <translation>Aucune démo trouvée !</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="209"/>
-        <location filename="../mainwindow.cpp" line="240"/>
+        <location filename="../mainwindow.cpp" line="226"/>
+        <location filename="../mainwindow.cpp" line="257"/>
         <source>Select folder</source>
         <translation>Selectionner un dossier</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="215"/>
+        <location filename="../mainwindow.cpp" line="232"/>
         <source>Copying files...</source>
         <translation>Copies en cours...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="215"/>
+        <location filename="../mainwindow.cpp" line="232"/>
         <source>Abort Copy</source>
         <translation>Annuler la copie</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="266"/>
-        <location filename="../mainwindow.cpp" line="303"/>
+        <location filename="../mainwindow.cpp" line="283"/>
+        <location filename="../mainwindow.cpp" line="320"/>
         <source>Warning</source>
         <translation>Attention</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="266"/>
+        <location filename="../mainwindow.cpp" line="283"/>
         <source>One or more files could not be moved.</source>
         <translation>Un ou plusieurs fichiers n&apos;ont pas été déplacés.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="275"/>
+        <location filename="../mainwindow.cpp" line="292"/>
         <source>Deletion</source>
         <translation>Suppression</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="276"/>
+        <location filename="../mainwindow.cpp" line="293"/>
         <source>Are you sure you want to delete %1 files ?</source>
         <translation>Êtes vous sûr de vouloir supprimer %1 fichiers ?</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="278"/>
+        <location filename="../mainwindow.cpp" line="295"/>
         <source>Yes</source>
         <translation>Oui</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="279"/>
+        <location filename="../mainwindow.cpp" line="296"/>
         <source>Cancel</source>
         <translation>Annuler</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="303"/>
+        <location filename="../mainwindow.cpp" line="320"/>
         <source>One or more files could not be deleted.</source>
         <translation>Un ou plusieurs fichiers n&apos;ont pas pu être supprimés.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="333"/>
+        <location filename="../mainwindow.cpp" line="350"/>
         <source>%1 demo(s) selected</source>
         <translation>%1 démo(s) sélectionnée(s)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="341"/>
+        <location filename="../mainwindow.cpp" line="358"/>
         <source>Select demos folder</source>
         <translation>Selectionnez un dossier de démos</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="420"/>
-        <location filename="../mainwindow.cpp" line="494"/>
+        <location filename="../mainwindow.cpp" line="437"/>
+        <location filename="../mainwindow.cpp" line="511"/>
         <source>%1 demo(s) found</source>
         <oldsource>%1 demos found</oldsource>
         <translation>%1 demo(s) trouvée(s)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="432"/>
+        <location filename="../mainwindow.cpp" line="449"/>
         <source>Analyzing... %1/%2</source>
         <translation>Analyse... %1/%2</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="474"/>
+        <location filename="../mainwindow.cpp" line="491"/>
         <source>Author</source>
         <translation>Auteur</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="475"/>
+        <location filename="../mainwindow.cpp" line="492"/>
         <source>Thanks to</source>
         <translation>Merci à</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="477"/>
+        <location filename="../mainwindow.cpp" line="494"/>
         <source>Created with</source>
         <translation>Créé avec</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="478"/>
+        <location filename="../mainwindow.cpp" line="495"/>
         <source>This software use </source>
         <translation>Ce logiciel utilise</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="479"/>
+        <location filename="../mainwindow.cpp" line="496"/>
         <source>Checkout sources at</source>
         <translation>Sources disponibles sur</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="547"/>
+        <location filename="../mainwindow.cpp" line="564"/>
         <source>Unavailable</source>
         <translation>Indisponible</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="563"/>
+        <location filename="../mainwindow.cpp" line="580"/>
         <source>No demo selected</source>
         <translation>Aucune démo sélectionnée</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="612"/>
+        <location filename="../mainwindow.cpp" line="629"/>
         <source>Quake 3 engine not found</source>
         <translation>L&apos;executable de Quake 3 n&apos;a pas été trouvé</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="629"/>
+        <location filename="../mainwindow.cpp" line="646"/>
         <source>Executing &apos;%1&apos;</source>
         <translation>Execution de &apos;%1&apos;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="898"/>
+        <location filename="../mainwindow.cpp" line="917"/>
         <source>Settings cannot be saved.</source>
         <translation>La configuration ne peut être sauvegardée.</translation>
     </message>
@@ -263,6 +263,16 @@
         <translation>Executable Quake 3 :</translation>
     </message>
     <message>
+        <location filename="../settingsdialog.ui" line="131"/>
+        <source>Selection</source>
+        <translation>Selection</translation>
+    </message>
+    <message>
+        <location filename="../settingsdialog.ui" line="137"/>
+        <source>Distinct player name when selecting worst demos</source>
+        <translation>Distinguer les noms des joueurs pour la selection des pires démos</translation>
+    </message>
+    <message>
         <source>...</source>
         <translation type="obsolete">...</translation>
     </message>
@@ -277,12 +287,12 @@
         <translation>Selection du moteur de quake 3</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="92"/>
+        <location filename="../settingsdialog.cpp" line="93"/>
         <source>Variable</source>
         <translation>Variable</translation>
     </message>
     <message>
-        <location filename="../settingsdialog.cpp" line="93"/>
+        <location filename="../settingsdialog.cpp" line="94"/>
         <source>Value</source>
         <translation>Valeur</translation>
     </message>
