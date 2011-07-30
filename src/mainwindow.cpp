@@ -97,8 +97,9 @@ void MainWindow::buildSelection( QSqlQuery * query )
 {
     QModelIndexList indexList;
 
-    m_selectInProgress = true;
+    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
 
+    m_selectInProgress = true;
     m_demoModel->clearBox();
     while( query->next() )
     {
@@ -115,6 +116,8 @@ void MainWindow::buildSelection( QSqlQuery * query )
     }
     m_selectInProgress = false;
     updateSelectionInfos();
+
+    QApplication::restoreOverrideCursor();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
