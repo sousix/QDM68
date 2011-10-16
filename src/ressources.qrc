@@ -5,7 +5,7 @@
         <file>images/gear_16.png</file>
         <file alias="valid">images/tick_16.png</file>
         <file alias="warning">images/warning_16.png</file>
-        <file>images/play_24.png</file>
+        <file alias="play">images/play_24.png</file>
         <file alias="orbb/blue">images/players/orbb/icon_blue.png</file>
         <file alias="orbb/red">images/players/orbb/icon_red.png</file>
         <file alias="orbb/default">images/players/orbb/icon_default.png</file>
@@ -98,5 +98,10 @@
         <file alias="unknown">images/players/icon_unknown.png</file>
         <file alias="lapin">images/icon/lapin_48.png</file>
         <file alias="delete">images/delete_text.png</file>
+        <file alias="slowest">images/slowest_demos.png</file>
+        <file alias="fastest">images/fastest_demos.png</file>
+        <file alias="invert_selection">images/invert_selection.png</file>
+        <file alias="clean_selection">images/clean.png</file>
+        <file alias="details">images/details.png</file>
     </qresource>
 </RCC>

@@ -61,6 +61,7 @@ protected:
 protected slots:
     void invertSelection();
     void selectWorst();
+    void selectFastest();
     void unselectAll();
     void onBoxChecked( const QModelIndex &, const QModelIndex & );
     void openDemosDialog();
@@ -77,6 +78,7 @@ protected slots:
     void moveDemosTo();
     void deleteDemos();
     void onSearchDemo( QString );
+    void onPopupMenu( const QPoint & );
 
 private:
     Ui::MainWindow * ui;
@@ -90,6 +92,7 @@ private:
     QStandardItemModel * m_varModel;
     bool m_selectInProgress;
     QLabel * m_textProgressBar;
+    QMenu * m_popupMenu;
 
     ThreadParser * m_thread;
 };

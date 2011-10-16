@@ -37,19 +37,24 @@ MainWindow::MainWindow(QWidget *parent) :
 
     createDatabase();
 
+    m_popupMenu = new QMenu(ui->listView);
+    m_popupMenu->addAction( QIcon(":/image/play"), tr("Play"), this, SLOT(playDemo()) );
+
     m_demoModel = new SqlTableModelCheckable( 0, this );
     m_demoModel->setTable( "demos" );
     m_demoModel->setEditStrategy( QSqlTableModel::OnManualSubmit );
 
     ui->listView->setModel( m_demoModel );
     ui->listView->setModelColumn(1);
+    ui->listView->setContextMenuPolicy( Qt::CustomContextMenu );
 
     m_varModel = new QStandardItemModel(this);
     ui->varTableView->setModel(m_varModel);
 
-    connect( ui->btnInvertSelection, SIGNAL(released()), this, SLOT(invertSelection()) );
-    connect( ui->btnSelectWorst, SIGNAL(released()), this, SLOT(selectWorst()) );
-    connect( ui->btnUnselectAll, SIGNAL(released()), this, SLOT(unselectAll()) );
+    connect( ui->actionInvert, SIGNAL(triggered()), this, SLOT(invertSelection()) );
+    connect( ui->actionSlowest, SIGNAL(triggered()), this, SLOT(selectWorst()) );
+    connect( ui->actionClean, SIGNAL(triggered()), this, SLOT(unselectAll()) );
+    connect( ui->actionBest, SIGNAL(triggered()), this, SLOT(selectFastest()) );
     connect( ui->btnMoveTo, SIGNAL(released()), this, SLOT(moveDemosTo()) );
     connect( ui->btnCopyTo, SIGNAL(released()), this, SLOT(copyDemosTo()) );
     connect( ui->btnDelete, SIGNAL(released()), this, SLOT(deleteDemos()) );
@@ -59,10 +64,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect( ui->actionParseAll, SIGNAL(triggered()), this, SLOT(parseAllDemo()) );
     connect( ui->actionStatistics, SIGNAL(triggered()), this, SLOT(openStatisticsDialog()) );
     connect( ui->actionAbout, SIGNAL(triggered()), this, SLOT(onAboutClicked()) );
-    connect( ui->btnPlayDemo, SIGNAL(released()), this, SLOT(playDemo()) );
-    connect( ui->btnDetails, SIGNAL(released()), this, SLOT(onDetailsClicked()) );
+    connect( ui->actionDetails, SIGNAL(triggered()), this, SLOT(onDetailsClicked()) );
+    //connect( ui->actionPlay, SIGNAL(triggered()), this, SLOT(playDemo()) );
     connect( ui->lineSearch, SIGNAL(textChanged(QString)), this, SLOT(onSearchDemo(QString)) );
     connect( ui->listView, SIGNAL(selectionChanged(const QModelIndex &)), this, SLOT(processDemo(const QModelIndex &)) );
+    connect( ui->listView, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(onPopupMenu(const QPoint &)) );
     connect( m_thread, SIGNAL(demoParsed(int, QString, int, int)), this, SLOT(onDemoParsed(int, QString, int, int)) );
     connect( m_thread, SIGNAL(finished()), this, SLOT(onThreadParserFinished()) );
     connect( m_demoModel, SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)),
@@ -82,6 +88,7 @@ MainWindow::MainWindow(QWidget *parent) :
     emptyDemoInfos();
 
     this->adjustSize();
+    ui->listView->setFocus();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -105,7 +112,9 @@ void MainWindow::buildSelection( QSqlQuery * query )
     {
         indexList = m_demoModel->match( m_demoModel->index(0, 0),
                                         Qt::DisplayRole,
-                                        QVariant( query->value(0).toInt() ).toInt() );
+                                        QVariant( query->value(0).toInt() ),
+                                        1,
+                                        Qt::MatchFlags( Qt::MatchExactly ) );
 
         if( indexList.count() > 0 )
         {
@@ -207,11 +216,44 @@ void MainWindow::selectWorst()
                     AND " + m_demoModel->filter() );
     }
 
-
     buildSelection( &query );
 
     if( !m_demoModel->hasBoxChecked() )
-        statusBar()->showMessage( tr("No worst demos found!") );
+        statusBar()->showMessage( tr("No slowest demos found!") );
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+void MainWindow::selectFastest()
+{
+    QSqlQuery query;
+    if( !m_settingsData.distinctPlayer )
+    {
+        query.exec( "SELECT d.id, d.map, d.physic \
+                    FROM demos as d \
+                    WHERE d.id IN ( SELECT id FROM demos AS e \
+                                    WHERE e.map = d.map \
+                                    AND e.physic = d.physic \
+                                    AND e.multi = d.multi \
+                                    AND " +  m_demoModel->filter() + " \
+                                    ORDER BY time ASC \
+                                    LIMIT 0,1) \
+                    AND " + m_demoModel->filter() );
+    }else{
+        query.exec( "SELECT d.id, d.map, d.physic, d.author \
+                    FROM demos as d \
+                    WHERE d.id IN ( SELECT id FROM demos AS e \
+                                    WHERE e.map = d.map \
+                                    AND e.physic = d.physic \
+                                    AND e.multi = d.multi \
+                                    AND e.author = d.author \
+                                    AND " +  m_demoModel->filter() + " \
+                                    ORDER BY time ASC \
+                                    LIMIT 0,1) \
+                    AND " + m_demoModel->filter() );
+    }
+
+
+    buildSelection( &query );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -292,7 +334,7 @@ void MainWindow::moveDemosTo()
 void MainWindow::deleteDemos()
 {
     QMessageBox question( QMessageBox::Question,
-                            tr("Deletion"),
+                            tr("Information"),
                             tr("Are you sure you want to delete %1 files ?").arg( m_demoModel->countBoxChecked() ),
                             QMessageBox::Yes | QMessageBox::Cancel );
     question.setButtonText( QMessageBox::Yes, tr("Yes") );
@@ -368,6 +410,14 @@ void MainWindow::openDemosDialog()
         createDemosList();
         saveSettings();
     }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+void MainWindow::onPopupMenu( const QPoint & position )
+{
+    Q_UNUSED(position);
+    m_popupMenu->exec(QCursor::pos());
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -626,6 +676,16 @@ void MainWindow::playDemo()
     QFileInfo engineFile( m_settingsData.engineFile );
     QString appPath = QDir::currentPath();
 
+    if( !currentDemoIndex().isValid() )
+    {
+        QMessageBox msgBox;
+        msgBox.setText( QString( tr("No demos selected") ) );
+        msgBox.setIcon( QMessageBox::Warning );
+        msgBox.exec();
+        return;
+    }
+
+
     if( !engineFile.exists() )
     {
         QMessageBox msgBox;
@@ -712,6 +772,8 @@ void MainWindow::parseAndSaveGameState( QString gameState,
     QResource resource;
     QStringList headModel;
     QString playerName("");
+    QString backgoundColorAvatar = QColor(QPalette().color(QPalette::Window).lighter(10)).name();
+    QString bgColorNick = QColor(QPalette().color(QPalette::Window).lighter(85)).name();
     playerInfos = "<table valign=\"middle\">";
     while( row < propertyStringList.size() )
     {
@@ -740,9 +802,9 @@ void MainWindow::parseAndSaveGameState( QString gameState,
         if( playerName != "" && headModel.size() > 0 )
         {
             nbplayer++;
-            playerInfos += "<tr><td bgcolor=\"black\"><img width=\"$size\" width=\"$size\" src=\""
+            playerInfos += "<tr><td bgcolor=\"" + backgoundColorAvatar + "\"><img width=\"$size\" width=\"$size\" src=\""
                            + resource.fileName()
-                           + "\"></td><td bgcolor=\"#cccccc\" width=\"100%\"> "
+                           + "\"></td><td bgcolor=\"" + bgColorNick + "\" width=\"100%\"> "
                            + "<b>" + HtmlPlayerName( playerName ) + "</b>"
                            + "<td></tr>";
 
@@ -917,7 +979,7 @@ void MainWindow::saveSettings()
     if( !m_settingsDevice->isWritable() )
     {
         QMessageBox msgBox;
-        msgBox.setText( tr( "Settings cannot be saved." ) );
+        msgBox.setText( tr( "Settings could not be saved." ) );
         msgBox.setIcon( QMessageBox::Warning );
         msgBox.exec();
         return;

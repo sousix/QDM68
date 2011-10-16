@@ -17,7 +17,7 @@
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Demos player</string>
+      <string>Demo player</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
@@ -134,7 +134,7 @@
       <item>
        <widget class="QCheckBox" name="boxDistinctPlayer">
         <property name="text">
-         <string>Distinct player name when selecting worst demos</string>
+         <string>Distinct player name when selecting slowest demos</string>
         </property>
         <property name="checked">
          <bool>true</bool>

@@ -73,7 +73,7 @@
             <string/>
            </property>
            <property name="text">
-            <string>Solo :</string>
+            <string>Offline :</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -134,7 +134,7 @@
             <string/>
            </property>
            <property name="text">
-            <string>Multi :</string>
+            <string>Online :</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -394,7 +394,7 @@
      <item>
       <widget class="QLabel" name="labelInfoSearch">
        <property name="text">
-        <string>Note : statistics take into account search results</string>
+        <string>Note : statistics take into account search results.</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
