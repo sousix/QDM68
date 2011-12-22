@@ -297,7 +297,7 @@
     <message>
         <location filename="../settingsdialog.ui" line="137"/>
         <source>Distinct players when selecting slowest or fastest demos</source>
-        <translation>Distinguer les joueurs lors de la selections des démos les plus lentes ou plus rapides</translation>
+        <translation>Distinguer les joueurs lors de la selection des démos les plus lentes/rapides</translation>
     </message>
     <message>
         <location filename="../settingsdialog.ui" line="59"/>
