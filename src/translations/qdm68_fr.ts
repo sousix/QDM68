@@ -11,7 +11,7 @@
     <message>
         <location filename="../mainwindow.ui" line="485"/>
         <source>Slowest</source>
-        <translation>+ lentes</translation>
+        <translation>Les + lentes</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="488"/>
@@ -21,7 +21,7 @@
     <message>
         <location filename="../mainwindow.ui" line="497"/>
         <source>Fastest</source>
-        <translation>+ rapides</translation>
+        <translation>Les + rapides</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="500"/>
