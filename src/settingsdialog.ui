@@ -134,7 +134,7 @@
       <item>
        <widget class="QCheckBox" name="boxDistinctPlayer">
         <property name="text">
-         <string>Distinct player name when selecting slowest demos</string>
+         <string>Distinct players when selecting slowest or fastest demos</string>
         </property>
         <property name="checked">
          <bool>true</bool>

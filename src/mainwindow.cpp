@@ -60,6 +60,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect( ui->btnDelete, SIGNAL(released()), this, SLOT(deleteDemos()) );
     connect( ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()) );
     connect( ui->actionDemos_folder, SIGNAL(triggered()), this, SLOT(openDemosDialog()) );
+    connect( ui->actionFolder, SIGNAL(triggered()), this, SLOT(openDemosDialog()) );
     connect( ui->actionSettings, SIGNAL(triggered()), this, SLOT(openSettingsDialog()) );
     connect( ui->actionParseAll, SIGNAL(triggered()), this, SLOT(parseAllDemo()) );
     connect( ui->actionStatistics, SIGNAL(triggered()), this, SLOT(openStatisticsDialog()) );
@@ -89,6 +90,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->adjustSize();
     ui->listView->setFocus();
+
+    #ifdef Q_OS_LINUX
+    ui->actionFolder->setIcon(QIcon::fromTheme("folder"));
+    ui->actionQuit->setIcon(QIcon::fromTheme("application-exit"));
+    ui->actionDemos_folder->setIcon(QIcon::fromTheme("folder"));
+    ui->actionSettings->setIcon(QIcon::fromTheme("preferences-system"));
+    ui->actionAbout->setIcon(QIcon::fromTheme("help-about"));
+    #endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -772,7 +781,7 @@ void MainWindow::parseAndSaveGameState( QString gameState,
     QResource resource;
     QStringList headModel;
     QString playerName("");
-    QString backgoundColorAvatar = QColor(QPalette().color(QPalette::Window).lighter(10)).name();
+    QString bgColorAvatar = QColor(QPalette().color(QPalette::Window).lighter(10)).name();
     QString bgColorNick = QColor(QPalette().color(QPalette::Window).lighter(85)).name();
     playerInfos = "<table valign=\"middle\">";
     while( row < propertyStringList.size() )
@@ -802,7 +811,7 @@ void MainWindow::parseAndSaveGameState( QString gameState,
         if( playerName != "" && headModel.size() > 0 )
         {
             nbplayer++;
-            playerInfos += "<tr><td bgcolor=\"" + backgoundColorAvatar + "\"><img width=\"$size\" width=\"$size\" src=\""
+            playerInfos += "<tr><td bgcolor=\"" + bgColorAvatar + "\"><img width=\"$size\" width=\"$size\" src=\""
                            + resource.fileName()
                            + "\"></td><td bgcolor=\"" + bgColorNick + "\" width=\"100%\"> "
                            + "<b>" + HtmlPlayerName( playerName ) + "</b>"

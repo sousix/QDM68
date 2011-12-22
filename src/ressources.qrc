@@ -103,5 +103,6 @@
         <file alias="invert_selection">images/invert_selection.png</file>
         <file alias="clean_selection">images/clean.png</file>
         <file alias="details">images/details.png</file>
+        <file>images/folder_24.png</file>
     </qresource>
 </RCC>

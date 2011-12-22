@@ -394,7 +394,7 @@
      <item>
       <widget class="QLabel" name="labelInfoSearch">
        <property name="text">
-        <string>Note : statistics take into account search results.</string>
+        <string>Note : statistics concerns only the current serach results.</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
