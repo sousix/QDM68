@@ -52,7 +52,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->varTableView->setModel(m_varModel);
 
     connect( ui->actionInvert, SIGNAL(triggered()), this, SLOT(invertSelection()) );
-    connect( ui->actionSlowest, SIGNAL(triggered()), this, SLOT(selectWorst()) );
+    connect( ui->actionSlowest, SIGNAL(triggered()), this, SLOT(selectSlowest()) );
     connect( ui->actionClean, SIGNAL(triggered()), this, SLOT(unselectAll()) );
     connect( ui->actionBest, SIGNAL(triggered()), this, SLOT(selectFastest()) );
     connect( ui->btnMoveTo, SIGNAL(released()), this, SLOT(moveDemosTo()) );
@@ -196,40 +196,15 @@ void MainWindow::invertSelection()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MainWindow::selectWorst()
+void MainWindow::selectSlowest()
 {
-    QSqlQuery query;
-    if( !m_settingsData.distinctPlayer )
-    {
-        query.exec( "SELECT d.id, d.map, d.physic \
-                    FROM demos as d \
-                    WHERE d.id NOT IN ( SELECT id FROM demos AS e \
-                                        WHERE e.map = d.map \
-                                        AND e.physic = d.physic \
-                                        AND e.multi = d.multi \
-                                        AND " +  m_demoModel->filter() + " \
-                                        ORDER BY time ASC \
-                                        LIMIT 0,1) \
-                    AND " + m_demoModel->filter() );
-    }else{
-        query.exec( "SELECT d.id, d.map, d.physic, d.author \
-                    FROM demos as d \
-                    WHERE d.id NOT IN ( SELECT id FROM demos AS e \
-                                        WHERE e.map = d.map \
-                                        AND e.physic = d.physic \
-                                        AND e.multi = d.multi \
-                                        AND e.author = d.author \
-                                        AND " +  m_demoModel->filter() + " \
-                                        ORDER BY time ASC \
-                                        LIMIT 0,1) \
-                    AND " + m_demoModel->filter() );
-    }
-
-    buildSelection( &query );
+    selectFastest();
+    invertSelection();
 
     if( !m_demoModel->hasBoxChecked() )
         statusBar()->showMessage( tr("No slowest demos found!") );
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 void MainWindow::selectFastest()
@@ -237,30 +212,29 @@ void MainWindow::selectFastest()
     QSqlQuery query;
     if( !m_settingsData.distinctPlayer )
     {
-        query.exec( "SELECT d.id, d.map, d.physic \
-                    FROM demos as d \
-                    WHERE d.id IN ( SELECT id FROM demos AS e \
-                                    WHERE e.map = d.map \
-                                    AND e.physic = d.physic \
-                                    AND e.multi = d.multi \
-                                    AND " +  m_demoModel->filter() + " \
-                                    ORDER BY time ASC \
-                                    LIMIT 0,1) \
-                    AND " + m_demoModel->filter() );
+        query.exec( " SELECT d.id, d.map, d.physic "
+                    " FROM demos as d "
+                    " WHERE d.id IN ( SELECT id FROM demos AS e "
+                                    " WHERE e.map = d.map "
+                                    " AND e.physic = d.physic "
+                                    " AND e.multi = d.multi "
+                                    " AND " +  m_demoModel->filter() + " "
+                                    " ORDER BY time ASC "
+                                    " LIMIT 0,1) "
+                    " AND " + m_demoModel->filter() );
     }else{
-        query.exec( "SELECT d.id, d.map, d.physic, d.author \
-                    FROM demos as d \
-                    WHERE d.id IN ( SELECT id FROM demos AS e \
-                                    WHERE e.map = d.map \
-                                    AND e.physic = d.physic \
-                                    AND e.multi = d.multi \
-                                    AND e.author = d.author \
-                                    AND " +  m_demoModel->filter() + " \
-                                    ORDER BY time ASC \
-                                    LIMIT 0,1) \
-                    AND " + m_demoModel->filter() );
+        query.exec( " SELECT d.id, d.map, d.physic, d.author "
+                    " FROM demos as d "
+                    " WHERE d.id IN ( SELECT id FROM demos AS e "
+                                    " WHERE e.map = d.map "
+                                    " AND e.physic = d.physic "
+                                    " AND e.multi = d.multi "
+                                    " AND e.author = d.author "
+                                    " AND " +  m_demoModel->filter() + " "
+                                    " ORDER BY time ASC "
+                                    " LIMIT 0,1) "
+                    " AND " + m_demoModel->filter() );
     }
-
 
     buildSelection( &query );
 }
@@ -549,11 +523,11 @@ void MainWindow::onDetailsClicked()
 
 void MainWindow::onAboutClicked()
 {
-    QString about =  "<h3><b>QDM68 v" SOFTWARE_VERSION "</b></h3>" +
+    QString about =  "<b>QDM68 v" SOFTWARE_VERSION "</b> (" + QString("%1").arg(sizeof(void*)*8) + " bits)<br><br>" +
             tr( "Author") + " : Stephane <i>`sOuSiX`</i> C.<br>" +
             tr( "Thanks to") + " : uZu (Linux package)" +
             + "<br><br>" +
-            tr( "Created with" ) + " <a href=\"http://qt.nokia.com\">Qt SDK</a><br>" +
+            tr( "Created with" ) + " <a href=\"http://qt.nokia.com\">Qt SDK " + QT_VERSION_STR + "</a><br>" +
             tr( "This software use ") + " <a href=\"http://skuller-vidnoe.narod.ru/q3sdc.htm\">q3sdc</a><br>" +
             tr( "Checkout sources at" ) + " <a href=\"https://github.com/sOuSiX/QDM68\">Github/QDM68</a><br>";
 

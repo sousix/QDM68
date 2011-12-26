@@ -60,7 +60,7 @@ protected:
 
 protected slots:
     void invertSelection();
-    void selectWorst();
+    void selectSlowest();
     void selectFastest();
     void unselectAll();
     void onBoxChecked( const QModelIndex &, const QModelIndex & );
