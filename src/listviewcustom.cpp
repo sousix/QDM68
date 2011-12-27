@@ -29,4 +29,6 @@ void ListViewCustom::currentChanged ( const QModelIndex & current, const QModelI
 {
     Q_UNUSED(previous);
     emit( selectionChanged( current ) );
+
+    QListView::currentChanged ( current, previous );
 }
