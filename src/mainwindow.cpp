@@ -65,7 +65,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect( ui->actionParseAll, SIGNAL(triggered()), this, SLOT(parseAllDemo()) );
     connect( ui->actionStatistics, SIGNAL(triggered()), this, SLOT(openStatisticsDialog()) );
     connect( ui->actionAbout, SIGNAL(triggered()), this, SLOT(onAboutClicked()) );
-    connect( ui->actionDetails, SIGNAL(triggered()), this, SLOT(onDetailsClicked()) );
+    connect( ui->actionDemosDetails, SIGNAL(toggled(bool)), this, SLOT(onDetailsClicked(bool)) );
     //connect( ui->actionPlay, SIGNAL(triggered()), this, SLOT(playDemo()) );
     connect( ui->lineSearch, SIGNAL(textChanged(QString)), this, SLOT(onSearchDemo(QString)) );
     connect( ui->listView, SIGNAL(selectionChanged(const QModelIndex &)), this, SLOT(processDemo(const QModelIndex &)) );
@@ -84,11 +84,8 @@ MainWindow::MainWindow(QWidget *parent) :
     loadSettings();
     createDemosList();
     buildRulesList();
-
-    ui->demoInfosBox->setVisible( false );
     emptyDemoInfos();
 
-    this->adjustSize();
     ui->listView->setFocus();
 
     #ifdef Q_OS_LINUX
@@ -510,10 +507,9 @@ void MainWindow::onThreadParserFinished()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MainWindow::onDetailsClicked()
+void MainWindow::onDetailsClicked( bool isChecked )
 {
-    ui->demoInfosBox->setVisible( !ui->demoInfosBox->isVisible()     );
-    this->adjustSize();
+    ui->demoInfosBox->setVisible( isChecked );
 
     if( currentDemoIndex().isValid() )
         processDemo( currentDemoIndex() );

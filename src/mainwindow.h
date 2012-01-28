@@ -70,7 +70,7 @@ protected slots:
     void playDemo();
     void parseAllDemo();
     void processDemo( const QModelIndex & );
-    void onDetailsClicked();
+    void onDetailsClicked(bool isChecked);
     void onDemoParsed( int, QString, int, int );
     void onAboutClicked();
     void onThreadParserFinished();
