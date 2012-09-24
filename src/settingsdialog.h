@@ -29,12 +29,16 @@ typedef struct QdmSettings
     QString engineFile;
     bool distinctPlayer;
     QMap<QString, QString> rules;
+    QDir demosDir;
+    bool showDetails;
 
     bool isEqual( QdmSettings other )
     {
         return( other.engineFile != this->engineFile ||
                 other.rules != this->rules ||
-                other.distinctPlayer != this->distinctPlayer );
+                other.distinctPlayer != this->distinctPlayer ||
+                other.demosDir != this->demosDir ||
+                other.showDetails != this->showDetails );
     }
 
     void copy( QdmSettings other )
@@ -42,6 +46,8 @@ typedef struct QdmSettings
         this->engineFile = other.engineFile;
         this->rules = other.rules;
         this->distinctPlayer = other.distinctPlayer;
+        this->demosDir = other.demosDir;
+        this->showDetails = other.showDetails;
     }
 
 } QdmSettings;
@@ -72,6 +78,7 @@ protected slots:
 private:
     Ui::SettingsDialog * ui;
     QStandardItemModel * m_model;
+    QdmSettings m_settings;
 };
 
 #endif // SETTINGSDIALOG_H

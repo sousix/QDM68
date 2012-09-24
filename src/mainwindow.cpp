@@ -66,7 +66,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect( ui->actionStatistics, SIGNAL(triggered()), this, SLOT(openStatisticsDialog()) );
     connect( ui->actionAbout, SIGNAL(triggered()), this, SLOT(onAboutClicked()) );
     connect( ui->actionDemosDetails, SIGNAL(toggled(bool)), this, SLOT(onDetailsClicked(bool)) );
-    //connect( ui->actionPlay, SIGNAL(triggered()), this, SLOT(playDemo()) );
     connect( ui->lineSearch, SIGNAL(textChanged(QString)), this, SLOT(onSearchDemo(QString)) );
     connect( ui->listView, SIGNAL(selectionChanged(const QModelIndex &)), this, SLOT(processDemo(const QModelIndex &)) );
     connect( ui->listView, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(onPopupMenu(const QPoint &)) );
@@ -75,18 +74,21 @@ MainWindow::MainWindow(QWidget *parent) :
     connect( m_demoModel, SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)),
              this, SLOT(onBoxChecked(const QModelIndex &, const QModelIndex &)) );
 
-    m_textProgressBar = new QLabel();
-    ui->statusBar->addPermanentWidget( m_textProgressBar );
-    m_textProgressBar->setVisible( false );
-    // Parse all demos : for developper
-    ui->actionParseAll->setVisible( false );
-
+    // Load settings file and adjust/load GUI data
     loadSettings();
     createDemosList();
     buildRulesList();
     emptyDemoInfos();
 
+    ui->demoInfosBox->setVisible( m_settingsData.showDetails );
+    ui->actionDemosDetails->setChecked( m_settingsData.showDetails );
     ui->listView->setFocus();
+
+    // For developper
+    ui->actionParseAll->setVisible( false );
+    m_textProgressBar = new QLabel();
+    ui->statusBar->addPermanentWidget( m_textProgressBar );
+    m_textProgressBar->setVisible( false );
 
     #ifdef Q_OS_LINUX
     ui->actionFolder->setIcon(QIcon::fromTheme("folder"));
@@ -248,7 +250,7 @@ void MainWindow::unselectAll()
 void MainWindow::copyDemosTo()
 {
     QFileDialog::Options options = QFileDialog::DontResolveSymlinks | QFileDialog::ShowDirsOnly;
-    QString dirName = QFileDialog::getExistingDirectory( this, tr("Select folder"), m_demosDir.absolutePath(), options );
+    QString dirName = QFileDialog::getExistingDirectory( this, tr("Select folder"), m_settingsData.demosDir.absolutePath(), options );
     QDir copyDir( dirName );
 
     if ( dirName.isEmpty() )
@@ -268,7 +270,7 @@ void MainWindow::copyDemosTo()
         if( m_demoModel->data( m_demoModel->index(i, 1), Qt::CheckStateRole ) == Qt::Checked )
         {
             progress.setValue(j++);
-            QFile::copy( m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(i, 1) ).toString(),
+            QFile::copy( m_settingsData.demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(i, 1) ).toString(),
                          copyDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(i, 1) ).toString() );
         }
     }
@@ -279,7 +281,7 @@ void MainWindow::copyDemosTo()
 void MainWindow::moveDemosTo()
 {
     QFileDialog::Options options = QFileDialog::DontResolveSymlinks | QFileDialog::ShowDirsOnly;
-    QString dirName = QFileDialog::getExistingDirectory( this, tr("Select folder"), m_demosDir.absolutePath(), options );
+    QString dirName = QFileDialog::getExistingDirectory( this, tr("Select folder"), m_settingsData.demosDir.absolutePath(), options );
     QDir moveDir( dirName );
 
     if ( dirName.isEmpty() )
@@ -292,7 +294,7 @@ void MainWindow::moveDemosTo()
     {
         if( m_demoModel->data( m_demoModel->index(i, 1), Qt::CheckStateRole ) == Qt::Checked )
         {
-             isMoved = QFile::rename( m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(i, 1) ).toString(),
+             isMoved = QFile::rename( m_settingsData.demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(i, 1) ).toString(),
                                       moveDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(i, 1) ).toString() );
              if( isMoved )
                 m_demoModel->removeRows( i, 1, m_demoModel->index(i, 1).parent() );
@@ -330,7 +332,7 @@ void MainWindow::deleteDemos()
     {
         if( m_demoModel->data( m_demoModel->index(i, 1), Qt::CheckStateRole ) == Qt::Checked )
         {
-            isRemoved = QFile::remove( m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(i, 1) ).toString() );
+            isRemoved = QFile::remove( m_settingsData.demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(i, 1) ).toString() );
             if( isRemoved )
                 m_demoModel->removeRows( i, 1, m_demoModel->index(i, 1).parent() );
 
@@ -349,8 +351,8 @@ void MainWindow::deleteDemos()
 
 void MainWindow::onBoxChecked( const QModelIndex & topLeft, const QModelIndex & bottomRight )
 {
-    Q_UNUSED(topLeft);
-    Q_UNUSED(bottomRight);
+    Q_UNUSED( topLeft );
+    Q_UNUSED( bottomRight );
 
     // Speed up selection : Do not update UI when selecting worst demos, or when inverting selection
     if( !m_selectInProgress )
@@ -380,13 +382,13 @@ void MainWindow::updateSelectionInfos()
 void MainWindow::openDemosDialog()
 {
     QFileDialog::Options options = QFileDialog::DontResolveSymlinks | QFileDialog::ShowDirsOnly;
-    QString dirName = QFileDialog::getExistingDirectory( this, tr("Select demos folder"), m_demosDir.absolutePath(), options );
+    QString dirName = QFileDialog::getExistingDirectory( this, tr("Select demos folder"), m_settingsData.demosDir.absolutePath(), options );
     QDir newDir( dirName );
 
     if ( !dirName.isEmpty() )
     {
         ui->lineSearch->setText("");
-        m_demosDir = newDir;
+        m_settingsData.demosDir = newDir;
         createDemosList();
         saveSettings();
     }
@@ -396,8 +398,8 @@ void MainWindow::openDemosDialog()
 
 void MainWindow::onPopupMenu( const QPoint & position )
 {
-    Q_UNUSED(position);
-    m_popupMenu->exec(QCursor::pos());
+    Q_UNUSED( position );
+    m_popupMenu->exec( QCursor::pos() );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -440,7 +442,7 @@ bool MainWindow::createDatabase()
 
 void MainWindow::createDemosList()
 {
-    if( !m_demosDir.exists() )
+    if( !m_settingsData.demosDir.exists() )
         return;
 
     QSqlQuery query;
@@ -450,12 +452,12 @@ void MainWindow::createDemosList()
     if( m_demoModel->removeRows( 0, m_demoModel->rowCount() ) )
         m_demoModel->submitAll(); // Apply changement in DB
 
-    for ( i=0 ; i < m_demosDir.entryInfoList().size() ; i++ )
+    for ( i=0 ; i < m_settingsData.demosDir.entryInfoList().size() ; i++ )
     {
-        if( pattern.exactMatch( m_demosDir.entryInfoList().at(i).fileName() ) )
+        if( pattern.exactMatch( m_settingsData.demosDir.entryInfoList().at(i).fileName() ) )
         {
             nbDemos++;
-            pattern.indexIn( m_demosDir.entryInfoList().at(i).fileName() );
+            pattern.indexIn( m_settingsData.demosDir.entryInfoList().at(i).fileName() );
             query.exec( QString( "INSERT INTO demos "
                                  "VALUES (%1,'%2','%3','%4','%5','%6','%7','%8', NULL, NULL)").arg(i).arg(  pattern.cap(0),
                                                                                                             pattern.cap(1),
@@ -472,7 +474,7 @@ void MainWindow::createDemosList()
     this->fetchMoreDemos();
 
     displayDemosInfos( currentDemoIndex().row() );
-    this->setWindowTitle( QString("QDM68 - %1").arg( m_demosDir.absolutePath() ) );
+    this->setWindowTitle( QString("QDM68 - %1").arg( m_settingsData.demosDir.absolutePath() ) );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -510,8 +512,10 @@ void MainWindow::onThreadParserFinished()
 void MainWindow::onDetailsClicked( bool isChecked )
 {
     ui->demoInfosBox->setVisible( isChecked );
+    m_settingsData.showDetails = isChecked;
+    saveSettings();
 
-    if( currentDemoIndex().isValid() )
+    if( currentDemoIndex().isValid() && isChecked )
         processDemo( currentDemoIndex() );
 }
 
@@ -520,12 +524,12 @@ void MainWindow::onDetailsClicked( bool isChecked )
 void MainWindow::onAboutClicked()
 {
     QString about =  "<b>QDM68 v" SOFTWARE_VERSION "</b> (" + QString("%1").arg(sizeof(void*)*8) + " bits)<br><br>" +
-            tr( "Author") + " : Stephane <i>`sOuSiX`</i> C.<br>" +
-            tr( "Thanks to") + " : uZu (Linux package)" +
-            + "<br><br>" +
-            tr( "Created with" ) + " <a href=\"http://qt.nokia.com\">Qt SDK " + QT_VERSION_STR + "</a><br>" +
-            tr( "This software use ") + " <a href=\"http://skuller-vidnoe.narod.ru/q3sdc.htm\">q3sdc</a><br>" +
-            tr( "Checkout sources at" ) + " <a href=\"https://github.com/sOuSiX/QDM68\">Github/QDM68</a><br>";
+                     tr( "License") + " : GPL v2<br>" +
+                     tr( "Author") + " : Stephane <i>`sOuSiX`</i> C.<br>" +
+                     tr( "Thanks to") + " : uZu (Linux package)" +
+                     + "<br><br>" +
+                     tr( "Created with" ) + " <a href=\"http://qt.nokia.com\">Qt " + QT_VERSION_STR + "</a>, <a href=\"http://skuller-vidnoe.narod.ru/q3sdc.htm\">q3sdc</a><br>" +
+                     tr( "Checkout sources at" ) + " <a href=\"https://github.com/sOuSiX/QDM68\">Github/QDM68</a><br>";
 
     QMessageBox::about( this, tr( "About QDM68" ), about );
 }
@@ -631,7 +635,7 @@ void MainWindow::processDemo( const QModelIndex & index )
     {
         QPair<int, QString> pair;
         pair.first = m_demoModel->data( m_demoModel->index(index.row(), 0) ).toInt();
-        pair.second = m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index( index.row(), 1 ) ).toString();
+        pair.second = m_settingsData.demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index( index.row(), 1 ) ).toString();
         m_thread->addPriorityDemo( pair );
     }else{
         displayDemosInfos( index.row() );
@@ -675,8 +679,8 @@ void MainWindow::playDemo()
     }
 
     // replace "/home/stef/.q3a/defrag/demos/subfolder/" by "subfolder/"
-    int strIndex = m_demosDir.absolutePath().indexOf("demos") + 6;
-    QString demoFolder =  m_demosDir.absolutePath().replace(0, strIndex, "");
+    int strIndex = m_settingsData.demosDir.absolutePath().indexOf("demos") + 6;
+    QString demoFolder =  m_settingsData.demosDir.absolutePath().replace(0, strIndex, "");
     if( demoFolder != "" )
         demoFolder += "/";
 
@@ -701,7 +705,7 @@ void MainWindow::parseAllDemo()
         if( m_demoModel->data( m_demoModel->index(i, 8) ).toString() == "" )
         {
             pair.first = m_demoModel->data( m_demoModel->index(i, 0) ).toInt();
-            pair.second = m_demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(i, 1) ).toString();
+            pair.second = m_settingsData.demosDir.absolutePath() + "/" + m_demoModel->data( m_demoModel->index(i, 1) ).toString();
             demosList.append( pair );
         }
     }
@@ -931,14 +935,16 @@ void MainWindow::loadSettings()
         m_settingsData.rules.insert( "sv_cheats", "0" );
         m_settingsData.engineFile = "";
         m_settingsData.distinctPlayer = true;
-        m_demosDir = QDir::home();
+        m_settingsData.demosDir = QDir::home();
+        m_settingsData.showDetails = true;
         saveSettings();
     }else{
         QStringList keys;
         m_settingsDevice->beginGroup( "paths" );
-        m_demosDir.setPath( m_settingsDevice->value( "demos_dir", QDir::home().absolutePath()).toString() );
+        m_settingsData.demosDir.setPath( m_settingsDevice->value( "demos_dir", QDir::home().absolutePath()).toString() );
         m_settingsData.engineFile = m_settingsDevice->value( "engine" ,"" ).toString();
         m_settingsData.distinctPlayer = m_settingsDevice->value( "distinct_player" ,"" ).toInt();
+        m_settingsData.showDetails = m_settingsDevice->value( "show_details" ,"1" ).toBool();
         m_settingsDevice->endGroup();
 
         m_settingsDevice->beginGroup( "rules" );
@@ -965,9 +971,10 @@ void MainWindow::saveSettings()
     }
 
     m_settingsDevice->beginGroup( "paths" );
-    m_settingsDevice->setValue( "demos_dir", m_demosDir.absolutePath() );
+    m_settingsDevice->setValue( "demos_dir", m_settingsData.demosDir.absolutePath() );
     m_settingsDevice->setValue( "engine", m_settingsData.engineFile );
     m_settingsDevice->setValue( "distinct_player", (int)m_settingsData.distinctPlayer );
+    m_settingsDevice->setValue( "show_details", (int)m_settingsData.showDetails );
     m_settingsDevice->endGroup();
     m_settingsDevice->beginGroup( "rules" );
     it = m_settingsData.rules.begin();

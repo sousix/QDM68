@@ -85,7 +85,6 @@ private:
 
     QdmSettings m_settingsData;
     QSettings * m_settingsDevice;
-    QDir m_demosDir;
     SqlTableModelCheckable * m_demoModel;
     SettingsDialog * m_settingsDialog;
     StatisticsDialog * m_statisticsDialog;

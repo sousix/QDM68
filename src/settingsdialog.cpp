@@ -67,17 +67,17 @@ void SettingsDialog::openEngineDialog()
 
 QdmSettings SettingsDialog::getSettings()
 {
-    QdmSettings settings;
+    m_settings.rules.clear();
 
     for( int i=0 ; i<m_model->rowCount() ; i++ )
     {
-        settings.rules.insert( m_model->item(i, 0)->text(),
-                               m_model->item(i, 1)->text() );
+        m_settings.rules.insert( m_model->item(i, 0)->text(),
+                                 m_model->item(i, 1)->text() );
     }
-    settings.engineFile = ui->leEngine->text();
-    settings.distinctPlayer = ui->boxDistinctPlayer->isChecked();
+    m_settings.engineFile = ui->leEngine->text();
+    m_settings.distinctPlayer = ui->boxDistinctPlayer->isChecked();
 
-    return settings;
+    return m_settings;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,6 +86,7 @@ void SettingsDialog::setSettings( QdmSettings settings )
 {
     QMap<QString, QString>::iterator it;
     int row;
+    m_settings.copy( settings );
 
     m_model->clear();
     m_model->setRowCount(settings.rules.size());
